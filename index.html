@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR 字母著色學習卡 - 動態著色同步版</title>
+  <title>AR 字母著色學習卡 - 觸控互動與動態著色版</title>
   
   <!-- A-Frame & MindAR (開源免費 WebAR) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -16,6 +16,7 @@
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       user-select: none;
+      touch-action: none; /* 允許精準觸控手勢 */
     }
     
     /* 頂部引導提示列 */
@@ -52,7 +53,7 @@
       50% { transform: scale(1.25); opacity: 0.6; }
     }
 
-    /* 右上角：當前擷取的紙張塗鴉縮圖預覽 (即時反饋感) */
+    /* 右上角：鏡頭擷取紙本塗鴉預覽小圖 */
     #preview-badge {
       position: fixed;
       top: 14px;
@@ -75,60 +76,81 @@
       margin-bottom: 2px;
     }
     #preview-canvas {
-      width: 64px;
-      height: 85px;
+      width: 60px;
+      height: 80px;
       border-radius: 6px;
       background: #fff;
       display: block;
       object-fit: cover;
     }
 
+    /* 螢幕正下方觸控操作提示文字 */
+    #touch-hint {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      color: #fef08a;
+      padding: 5px 14px;
+      border-radius: 15px;
+      font-size: 11px;
+      font-weight: 500;
+      z-index: 998;
+      pointer-events: none;
+      border: 1px solid rgba(254, 240, 138, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
     /* 底部操作面板 */
     #hud-bottom {
       position: fixed;
-      bottom: 20px;
+      bottom: 18px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 999;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
-      width: 92%;
+      gap: 8px;
+      width: 94%;
       max-width: 440px;
     }
     .action-btn {
       background: linear-gradient(135deg, #3b82f6, #1d4ed8);
       color: #ffffff;
       border: none;
-      padding: 10px 18px;
+      padding: 9px 16px;
       border-radius: 9999px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: transform 0.1s ease, filter 0.2s ease;
+      gap: 5px;
+      transition: transform 0.1s ease;
     }
     .action-btn:active {
       transform: scale(0.94);
     }
     .btn-camera {
       background: linear-gradient(135deg, #f59e0b, #d97706);
-      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
     }
     .btn-green {
       background: linear-gradient(135deg, #10b981, #059669);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
     }
     .btn-toggle {
       background: rgba(30, 41, 59, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #cbd5e1;
       font-size: 12px;
-      padding: 8px 14px;
+      padding: 7px 12px;
     }
     .btn-toggle.active {
       background: #4f46e5;
@@ -136,10 +158,10 @@
       border-color: #818cf8;
     }
 
-    /* 拍照成功吐司訊息 */
+    /* 吐司訊息提示 */
     #toast-msg {
       position: fixed;
-      top: 70px;
+      top: 66px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(16, 185, 129, 0.95);
@@ -154,6 +176,22 @@
       transition: opacity 0.3s ease;
       pointer-events: none;
     }
+
+    /* 點擊水花粒子效果 */
+    .tap-sparkle {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0.5);
+      animation: sparkleAnim 0.5s ease-out forwards;
+      z-index: 1000;
+    }
+    @keyframes sparkleAnim {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+    }
   </style>
 </head>
 <body>
@@ -167,24 +205,29 @@
   <!-- 右上角：鏡頭擷取紙本塗鴉預覽小圖 -->
   <div id="preview-badge">
     <span>🎨 採樣塗鴉</span>
-    <canvas id="preview-canvas" width="128" height="170"></canvas>
+    <canvas id="preview-canvas" width="120" height="160"></canvas>
   </div>
 
-  <div id="toast-msg">✨ 已成功捕捉紙本塗鴉顏色！</div>
+  <div id="toast-msg">✨ 提示訊息</div>
+
+  <!-- 觸控互動手勢提示 -->
+  <div id="touch-hint">
+    <span>👆</span><span>點擊 3D 動物/字母互動 • 單指滑動旋轉 • 雙指縮放</span>
+  </div>
 
   <!-- 底部操作面板 -->
   <div id="hud-bottom">
     <button class="action-btn btn-camera" onclick="captureAndLockColoring()">
-      <span>📸</span><span>拍下/更新塗鴉顏色</span>
+      <span>📸</span><span>拍下/鎖定塗鴉</span>
     </button>
     <button class="action-btn btn-green" onclick="playPhonicsAudio()">
-      <span>🗣️</span><span id="btn-text">聽自然發音</span>
+      <span>🗣️</span><span id="btn-text">自然發音</span>
     </button>
     <button id="live-toggle-btn" class="action-btn btn-toggle active" onclick="toggleLiveSync()">
-      <span>🔴</span><span>即時連線同步: 開</span>
+      <span>🔴</span><span>即時同步: 開</span>
     </button>
-    <button class="action-btn btn-toggle" onclick="triggerAnimalAction()">
-      <span id="action-icon">🐊</span><span id="action-text">動作互動</span>
+    <button class="action-btn btn-toggle" onclick="resetModelPose()">
+      <span>🔄</span><span>重設角度</span>
     </button>
   </div>
 
@@ -200,64 +243,66 @@
 
     <!-- ================= 標靶 0：Aa Alligator ================= -->
     <a-entity id="targetAa" mindar-image-target="targetIndex: 0">
-      <!-- 3D 浮空字母 Aa (自動貼上學生塗鴉顏色) -->
-      <a-entity id="letterMeshAa" position="-0.25 0.5 0.2"
-                animation="property: position; to: -0.25 0.55 0.2; dir: alternate; dur: 1200; loop: true; easing: easeInOutSine"></a-entity>
+      <!-- 字母群組 (支援點擊彈跳) -->
+      <a-entity id="letterMeshAa" position="-0.25 0.5 0.2"></a-entity>
 
-      <!-- 3D 鱷魚 (主體、頭部、尾巴均動態貼上塗鴉紋理) -->
-      <a-entity id="alligatorGroup" position="0 -0.15 0.15" rotation="20 0 0">
-        <!-- 沼澤半透明水波 (動態水紋顏色) -->
-        <a-plane id="waterPlane" opacity="0.7" width="1.0" height="0.9" position="0 -0.06 0" rotation="-90 0 0"></a-plane>
+      <!-- 鱷魚旋轉互動容器 (支援滑動旋轉與點擊) -->
+      <a-entity id="alligatorRotator" position="0 -0.15 0.15">
+        <a-entity id="alligatorGroup" rotation="20 0 0">
+          <!-- 沼澤半透明水波 -->
+          <a-plane id="waterPlaneAa" opacity="0.7" width="1.0" height="0.9" position="0 -0.06 0" rotation="-90 0 0"></a-plane>
+        </a-entity>
       </a-entity>
     </a-entity>
 
     <!-- ================= 標靶 1：Bb Bear ================= -->
     <a-entity id="targetBb" mindar-image-target="targetIndex: 1">
-      <!-- 3D 浮空字母 Bb -->
-      <a-entity id="letterMeshBb" position="-0.25 0.5 0.2"
-                animation="property: position; to: -0.25 0.55 0.2; dir: alternate; dur: 1200; loop: true; easing: easeInOutSine"></a-entity>
+      <!-- 字母群組 (支援點擊彈跳) -->
+      <a-entity id="letterMeshBb" position="-0.25 0.5 0.2"></a-entity>
 
-      <!-- 3D 棕熊 (主體、頭部、耳朵動態貼上塗鴉紋理) -->
-      <a-entity id="bearGroup" position="0 -0.1 0.15" rotation="15 0 0"></a-entity>
+      <!-- 棕熊旋轉互動容器 -->
+      <a-entity id="bearRotator" position="0 -0.1 0.15">
+        <a-entity id="bearGroup" rotation="15 0 0">
+          <a-plane id="waterPlaneBb" opacity="0.6" width="1.0" height="0.9" position="0 -0.06 0" rotation="-90 0 0"></a-plane>
+        </a-entity>
+      </a-entity>
     </a-entity>
 
   </a-scene>
 
-  <!-- 核心運算：動態著色擷取與 UV 貼圖管線 -->
+  <!-- 核心運算：動態著色擷取與觸控互動系統 -->
   <script>
     /* =========================================================
-       1. 全域變數與動態貼圖畫布
+       1. 全域狀態與動態貼圖畫布
        ========================================================= */
     let activeTarget = 'Aa';
     let isTargetTracked = false;
     let isLiveSync = true;
     let videoEl = null;
 
-    // 核心貼圖畫布 (512x680 解析度，長寬比對應圖卡約 3:4)
+    // 著色貼圖畫布
     const textureCanvas = document.createElement('canvas');
     textureCanvas.width = 512;
     textureCanvas.height = 680;
     const texCtx = textureCanvas.getContext('2d', { willReadFrequently: true });
-
-    // 預設底色填白
     texCtx.fillStyle = '#ffffff';
     texCtx.fillRect(0, 0, 512, 680);
 
-    // Three.js 動態 Canvas 貼圖物件
     const dynamicTexture = new THREE.CanvasTexture(textureCanvas);
     dynamicTexture.colorSpace = THREE.SRGBColorSpace || THREE.sRGBEncoding;
 
-    // 預覽縮圖畫布
+    // 縮圖畫布
     const previewCanvas = document.getElementById('preview-canvas');
     const prevCtx = previewCanvas.getContext('2d');
 
     const hudText = document.querySelector('#instruction-text');
     const btnText = document.querySelector('#btn-text');
-    const actionIcon = document.querySelector('#action-icon');
-    const actionText = document.querySelector('#action-text');
+
+    // 觸控可點選的三維物件群 (Raycast targets)
+    const clickableObjects = [];
 
     /* =========================================================
-       2. 建立具備精準 UV 對應的 3D 模型
+       2. 建立 3D 模型與光影幾何體
        ========================================================= */
     const sceneEl = document.querySelector('a-scene');
 
@@ -265,10 +310,9 @@
       buildTexturedAlligator();
       buildTexturedBear();
       buildTexturedLetters();
+      setupTouchRaycaster();
     });
 
-    // 鱷魚 UV 分區：
-    // 紙張中鱷魚位於 U: [0.15 ~ 0.85], V: [0.50 ~ 0.85]
     function buildTexturedAlligator() {
       const group = document.querySelector('#alligatorGroup').object3D;
       const mat = new THREE.MeshStandardMaterial({
@@ -277,20 +321,22 @@
         metalness: 0.1
       });
 
-      // 鱷魚身軀 (自訂 UV 讓頂部嚴格對齊圖卡上的鱷魚肚子與背部)
+      // 鱷魚身軀
       const bodyGeom = new THREE.BoxGeometry(0.38, 0.14, 0.55);
       remapBoxUV(bodyGeom, 0.2, 0.5, 0.8, 0.82);
       const bodyMesh = new THREE.Mesh(bodyGeom, mat);
-      bodyMesh.name = "body";
+      bodyMesh.name = "alligator_body";
       group.add(bodyMesh);
+      clickableObjects.push(bodyMesh);
 
-      // 鱷魚嘴部 (對齊鱷魚頭部區)
+      // 鱷魚嘴部
       const snoutGeom = new THREE.BoxGeometry(0.24, 0.09, 0.35);
       remapBoxUV(snoutGeom, 0.1, 0.52, 0.35, 0.75);
       const snoutMesh = new THREE.Mesh(snoutGeom, mat);
       snoutMesh.position.set(0, -0.02, 0.42);
-      snoutMesh.name = "snout";
+      snoutMesh.name = "alligator_snout";
       group.add(snoutMesh);
+      clickableObjects.push(snoutMesh);
 
       // 眼睛
       const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
@@ -310,11 +356,12 @@
       remapConeUV(tailGeom, 0.6, 0.55, 0.9, 0.85);
       const tailMesh = new THREE.Mesh(tailGeom, mat);
       tailMesh.position.set(0, 0, -0.48);
-      tailMesh.name = "tail";
+      tailMesh.name = "alligator_tail";
       group.add(tailMesh);
+      clickableObjects.push(tailMesh);
 
-      // 水面底板 (對齊下半部水波紋)
-      const waterEl = document.querySelector('#waterPlane');
+      // 水面底板
+      const waterEl = document.querySelector('#waterPlaneAa');
       if (waterEl) {
         waterEl.addEventListener('loaded', () => {
           const wMesh = waterEl.getObject3D('mesh');
@@ -324,13 +371,13 @@
               transparent: true,
               opacity: 0.75
             });
+            wMesh.name = "water";
+            clickableObjects.push(wMesh);
           }
         });
       }
     }
 
-    // 棕熊 UV 分區：
-    // 紙張中棕熊位於 U: [0.15 ~ 0.85], V: [0.45 ~ 0.90]
     function buildTexturedBear() {
       const group = document.querySelector('#bearGroup').object3D;
       const mat = new THREE.MeshStandardMaterial({
@@ -344,23 +391,26 @@
       remapSphereUV(bodyGeom, 0.3, 0.45, 0.85, 0.85);
       const bodyMesh = new THREE.Mesh(bodyGeom, mat);
       bodyMesh.scale.set(1.0, 1.2, 1.35);
-      bodyMesh.name = "body";
+      bodyMesh.name = "bear_body";
       group.add(bodyMesh);
+      clickableObjects.push(bodyMesh);
 
       // 熊頭部
       const headGeom = new THREE.SphereGeometry(0.18, 16, 16);
       remapSphereUV(headGeom, 0.15, 0.5, 0.45, 0.8);
       const headMesh = new THREE.Mesh(headGeom, mat);
       headMesh.position.set(0, 0.22, 0.26);
-      headMesh.name = "head";
+      headMesh.name = "bear_head";
       group.add(headMesh);
+      clickableObjects.push(headMesh);
 
-      // 熊鼻子嘴吻
+      // 熊吻部
       const snoutGeom = new THREE.SphereGeometry(0.075, 12, 12);
       remapSphereUV(snoutGeom, 0.15, 0.65, 0.35, 0.85);
       const snoutMesh = new THREE.Mesh(snoutGeom, mat);
       snoutMesh.position.set(0, 0.18, 0.42);
       group.add(snoutMesh);
+      clickableObjects.push(snoutMesh);
 
       // 黑色鼻頭
       const nose = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), new THREE.MeshBasicMaterial({ color: 0x1e293b }));
@@ -374,33 +424,36 @@
         const ear = new THREE.Mesh(earGeom, mat);
         ear.position.set(x, 0.35, 0.24);
         group.add(ear);
+        clickableObjects.push(ear);
       });
     }
 
-    // 3D 浮空字母 Aa 與 Bb (嚴格貼上紙本上半部所塗顏色)
     function buildTexturedLetters() {
       // Aa
       const aaGroup = document.querySelector('#letterMeshAa').object3D;
-      const letterAaGeom = new THREE.BoxGeometry(0.42, 0.38, 0.12);
+      const letterAaGeom = new THREE.BoxGeometry(0.44, 0.40, 0.14);
       remapBoxUV(letterAaGeom, 0.15, 0.1, 0.85, 0.42);
       const aaMesh = new THREE.Mesh(letterAaGeom, new THREE.MeshStandardMaterial({
         map: dynamicTexture,
         roughness: 0.3
       }));
+      aaMesh.name = "letter_Aa";
       aaGroup.add(aaMesh);
+      clickableObjects.push(aaMesh);
 
       // Bb
       const bbGroup = document.querySelector('#letterMeshBb').object3D;
-      const letterBbGeom = new THREE.BoxGeometry(0.42, 0.38, 0.12);
+      const letterBbGeom = new THREE.BoxGeometry(0.44, 0.40, 0.14);
       remapBoxUV(letterBbGeom, 0.15, 0.1, 0.85, 0.42);
       const bbMesh = new THREE.Mesh(letterBbGeom, new THREE.MeshStandardMaterial({
         map: dynamicTexture,
         roughness: 0.3
       }));
+      bbMesh.name = "letter_Bb";
       bbGroup.add(bbMesh);
+      clickableObjects.push(bbMesh);
     }
 
-    // UV 重映射輔助函式：將幾何體 UV 侷限在紙張指定區域 [uMin, vMin, uMax, vMax]
     function remapBoxUV(geometry, uMin, vMin, uMax, vMax) {
       const uv = geometry.attributes.uv;
       for (let i = 0; i < uv.count; i++) {
@@ -432,7 +485,220 @@
     }
 
     /* =========================================================
-       3. 電腦視覺核心：相機即時透視萃取 (Homography Warp)
+       3. 觸控螢幕手勢系統 (Raycast 點擊 + 單指滑動旋轉 + 雙指捏合縮放)
+       ========================================================= */
+    function setupTouchRaycaster() {
+      const raycaster = new THREE.Raycaster();
+      const mouseVec = new THREE.Vector2();
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchStartTime = 0;
+      let isDragging = false;
+      let initialPinchDist = 0;
+      let initialScale = 1.0;
+
+      // 取得當前作用中的動物旋轉容器
+      function getActiveRotator() {
+        const id = (activeTarget === 'Aa') ? '#alligatorRotator' : '#bearRotator';
+        return document.querySelector(id)?.object3D;
+      }
+
+      window.addEventListener('pointerdown', (e) => {
+        // 若點在按鈕或選單上則不觸發 3D 互動
+        if (e.target.closest('#hud-top, #hud-bottom, #preview-badge, button')) return;
+
+        touchStartX = e.clientX;
+        touchStartY = e.clientY;
+        touchStartTime = Date.now();
+        isDragging = false;
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!isTargetTracked) return;
+        if (e.target.closest('#hud-top, #hud-bottom, #preview-badge, button')) return;
+
+        const dx = e.clientX - touchStartX;
+        const dy = e.clientY - touchStartY;
+
+        // 若滑動超過 8px 判定為旋轉拖曳手勢
+        if (Math.hypot(dx, dy) > 8) {
+          isDragging = true;
+          const rotator = getActiveRotator();
+          if (rotator) {
+            // 單指左右滑動旋轉 360 度
+            rotator.rotation.y += dx * 0.012;
+          }
+          touchStartX = e.clientX;
+          touchStartY = e.clientY;
+        }
+      });
+
+      window.addEventListener('pointerup', (e) => {
+        if (e.target.closest('#hud-top, #hud-bottom, #preview-badge, button')) return;
+
+        const touchDuration = Date.now() - touchStartTime;
+        // 若時間小於 300ms 且沒有拖曳，判定為「點擊 (Tap)」
+        if (!isDragging && touchDuration < 350) {
+          handleScreenTap(e.clientX, e.clientY);
+        }
+        isDragging = false;
+      });
+
+      // 支援手機雙指捏合縮放 (Pinch to Zoom)
+      window.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          initialPinchDist = Math.hypot(dx, dy);
+          const rotator = getActiveRotator();
+          if (rotator) initialScale = rotator.scale.x;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialPinchDist > 0) {
+          const dx = e.touches[0].clientX - e.touches[1].clientX;
+          const dy = e.touches[0].clientY - e.touches[1].clientY;
+          const currentDist = Math.hypot(dx, dy);
+          const factor = currentDist / initialPinchDist;
+          const rotator = getActiveRotator();
+          if (rotator) {
+            const newScale = Math.max(0.6, Math.min(2.2, initialScale * factor));
+            rotator.scale.set(newScale, newScale, newScale);
+          }
+        }
+      }, { passive: true });
+
+      // 觸控點擊射線判定
+      function handleScreenTap(clientX, clientY) {
+        if (!sceneEl.camera) return;
+
+        mouseVec.x = (clientX / window.innerWidth) * 2 - 1;
+        mouseVec.y = -(clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouseVec, sceneEl.camera);
+        const intersects = raycaster.intersectObjects(clickableObjects, true);
+
+        if (intersects.length > 0) {
+          const hitObj = intersects[0].object;
+          createSparkleEffect(clientX, clientY);
+          triggerHapticFeedback();
+          onObjectTapped(hitObj.name);
+        }
+      }
+    }
+
+    // 依據點選之 3D 部位觸發專屬動作、動畫與語音
+    function onObjectTapped(name) {
+      const toast = document.getElementById('toast-msg');
+
+      if (name.includes('letter')) {
+        // 點選 3D 字母：觸發 360 度翻滾跳躍與自然發音
+        const letterGroup = (activeTarget === 'Aa')
+          ? document.querySelector('#letterMeshAa')
+          : document.querySelector('#letterMeshBb');
+        
+        if (letterGroup) {
+          letterGroup.setAttribute('animation__spin', {
+            property: 'rotation',
+            to: '0 360 0',
+            dur: 800,
+            easing: 'easeInOutBack'
+          });
+          setTimeout(() => { letterGroup.removeAttribute('animation__spin'); }, 850);
+        }
+
+        toast.innerText = (activeTarget === 'Aa') ? "✨ 點擊字母 Aa！" : "✨ 點擊字母 Bb！";
+        showToast();
+        playPhonicsAudio();
+
+      } else if (name.includes('alligator')) {
+        // 點選鱷魚主體：張大嘴咬合 (Chomp!)
+        const snout = document.querySelector('#alligatorGroup').object3D.getObjectByName('alligator_snout');
+        const tail = document.querySelector('#alligatorGroup').object3D.getObjectByName('alligator_tail');
+        if (snout) {
+          snout.rotation.x = -0.45;
+          if (tail) tail.rotation.z = 0.3;
+          setTimeout(() => {
+            snout.rotation.x = 0;
+            if (tail) tail.rotation.z = -0.3;
+            setTimeout(() => { if (tail) tail.rotation.z = 0; }, 200);
+          }, 400);
+        }
+        toast.innerText = "🐊 鱷魚張嘴：Snap! Chomp!";
+        showToast();
+        speakPhonics("Snap! Chomp! Alligator!");
+
+      } else if (name.includes('bear')) {
+        // 點選棕熊主體：晃動頭部與咆哮 (Growl!)
+        const head = document.querySelector('#bearGroup').object3D.getObjectByName('bear_head');
+        if (head) {
+          head.rotation.y = 0.5;
+          head.position.y = 0.28;
+          setTimeout(() => {
+            head.rotation.y = -0.5;
+            setTimeout(() => {
+              head.rotation.y = 0;
+              head.position.y = 0.22;
+            }, 300);
+          }, 300);
+        }
+        toast.innerText = "🐻 棕熊咆哮：Growl!";
+        showToast();
+        speakPhonics("Roar! Bear!");
+
+      } else if (name.includes('water')) {
+        // 點選水面：激起水花
+        toast.innerText = "💦 激起沼澤漣漪水花！";
+        showToast();
+        speakPhonics("Splash!");
+      }
+    }
+
+    // 觸控微震動回饋 (增加手機玩具實體手感)
+    function triggerHapticFeedback() {
+      if (navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }
+
+    // 點擊螢幕爆發彩色發光粒子
+    function createSparkleEffect(x, y) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'tap-sparkle';
+      sparkle.style.left = x + 'px';
+      sparkle.style.top = y + 'px';
+      sparkle.style.background = `radial-gradient(circle, #facc15 0%, rgba(245,158,11,0) 70%)`;
+      document.body.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 550);
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast-msg');
+      toast.style.opacity = '1';
+      setTimeout(() => { toast.style.opacity = '0'; }, 1800);
+    }
+
+    // 重設角度與大小
+    function resetModelPose() {
+      const rotAa = document.querySelector('#alligatorRotator')?.object3D;
+      const rotBb = document.querySelector('#bearRotator')?.object3D;
+      if (rotAa) {
+        rotAa.rotation.set(0, 0, 0);
+        rotAa.scale.set(1, 1, 1);
+      }
+      if (rotBb) {
+        rotBb.rotation.set(0, 0, 0);
+        rotBb.scale.set(1, 1, 1);
+      }
+      const toast = document.getElementById('toast-msg');
+      toast.innerText = "🔄 已重設 3D 角色角度與大小！";
+      showToast();
+    }
+
+    /* =========================================================
+       4. 電腦視覺核心：相機即時透視萃取 (Homography Warp)
        ========================================================= */
     function getVideoElement() {
       if (!videoEl) {
@@ -441,7 +707,6 @@
       return videoEl;
     }
 
-    // 將紙張四角自 3D 投影至鏡頭視訊像素座標
     function extractPaperColoring() {
       const v = getVideoElement();
       if (!v || v.readyState < 2 || !v.videoWidth) return false;
@@ -455,15 +720,14 @@
       const camera = sceneEl.camera;
       const targetObj = targetEl.object3D;
 
-      // 標靶圖卡長寬比約為 1.33 (3:4)
       const halfW = 0.5;
       const halfH = 0.665;
 
       const localCorners = [
-        new THREE.Vector3(-halfW,  halfH, 0), // 0: 左上
-        new THREE.Vector3( halfW,  halfH, 0), // 1: 右上
-        new THREE.Vector3( halfW, -halfH, 0), // 2: 右下
-        new THREE.Vector3(-halfW, -halfH, 0)  // 3: 左下
+        new THREE.Vector3(-halfW,  halfH, 0),
+        new THREE.Vector3( halfW,  halfH, 0),
+        new THREE.Vector3( halfW, -halfH, 0),
+        new THREE.Vector3(-halfW, -halfH, 0)
       ];
 
       const videoW = v.videoWidth;
@@ -475,33 +739,24 @@
         p.applyMatrix4(targetObj.matrixWorld);
         p.project(camera);
 
-        // NDC [-1, 1] 轉換為視訊像素座標
         const vx = (p.x * 0.5 + 0.5) * videoW;
         const vy = (-p.y * 0.5 + 0.5) * videoH;
         scrCorners.push({ x: vx, y: vy });
       }
 
-      // 執行仿射透視網格變換，將視訊畫面拉平寫入 textureCanvas
       warpQuadToCanvas(v, scrCorners, textureCanvas);
-
-      // 色彩飽和度增強（讓蠟筆與彩色筆更鮮豔）
       boostColorVibrancy(texCtx, textureCanvas.width, textureCanvas.height);
-
-      // 更新 Three.js 紋理
       dynamicTexture.needsUpdate = true;
-
-      // 同步更新右上角預覽縮圖
       prevCtx.drawImage(textureCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
 
       return true;
     }
 
-    // 網格雙線性分劃仿射繪製 (高效、相容所有手機瀏覽器)
     function warpQuadToCanvas(sourceImg, corners, targetCanvas) {
       const ctx = targetCanvas.getContext('2d');
       const W = targetCanvas.width;
       const H = targetCanvas.height;
-      const N = 3; // 3x3 網格 = 18 個三角形，速度極快 (<0.5ms)
+      const N = 3;
 
       ctx.clearRect(0, 0, W, H);
 
@@ -510,21 +765,17 @@
           const u0 = c / N, u1 = (c + 1) / N;
           const v0 = r / N, v1 = (r + 1) / N;
 
-          // 目標畫布矩形座標
           const dx0 = u0 * W, dy0 = v0 * H;
           const dx1 = u1 * W, dy1 = v0 * H;
           const dx2 = u1 * W, dy2 = v1 * H;
           const dx3 = u0 * W, dy3 = v1 * H;
 
-          // 來源相機視訊中的對應四邊形座標 (雙線性內插)
           const s0 = bilerp(corners, u0, v0);
           const s1 = bilerp(corners, u1, v0);
           const s2 = bilerp(corners, u1, v1);
           const s3 = bilerp(corners, u0, v1);
 
-          // 上半三角形
           drawAffineTriangle(ctx, sourceImg, dx0, dy0, dx1, dy1, dx3, dy3, s0.x, s0.y, s1.x, s1.y, s3.x, s3.y);
-          // 下半三角形
           drawAffineTriangle(ctx, sourceImg, dx1, dy1, dx2, dy2, dx3, dy3, s1.x, s1.y, s2.x, s2.y, s3.x, s3.y);
         }
       }
@@ -566,13 +817,11 @@
       ctx.restore();
     }
 
-    // 提升塗鴉對比度與飽和度 (改善室內日光燈或淡蠟筆問題)
     function boostColorVibrancy(ctx, w, h) {
       const imgData = ctx.getImageData(0, 0, w, h);
       const data = imgData.data;
       for (let i = 0; i < data.length; i += 4) {
         let r = data[i], g = data[i+1], b = data[i+2];
-        // 增強對比 (S-curve)
         r = ((r / 255 - 0.5) * 1.25 + 0.5) * 255;
         g = ((g / 255 - 0.5) * 1.25 + 0.5) * 255;
         b = ((b / 255 - 0.5) * 1.25 + 0.5) * 255;
@@ -584,13 +833,12 @@
     }
 
     /* =========================================================
-       4. 即時輪詢排程 (Render Loop)
+       5. 輪詢排程與事件監聽
        ========================================================= */
     let lastExtractTime = 0;
     function animLoop(time) {
       if (isTargetTracked && isLiveSync) {
-        // 每 150ms 擷取一次 (即時更新且不發熱卡頓)
-        if (time - lastExtractTime > 150) {
+        if (time - lastExtractTime > 160) {
           extractPaperColoring();
           lastExtractTime = time;
         }
@@ -599,20 +847,14 @@
     }
     requestAnimationFrame(animLoop);
 
-    /* =========================================================
-       5. 互動按鈕與事件監聽
-       ========================================================= */
     const targetAa = document.querySelector('#targetAa');
     const targetBb = document.querySelector('#targetBb');
 
     targetAa.addEventListener("targetFound", () => {
       activeTarget = 'Aa';
       isTargetTracked = true;
-      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (著色同步中)</b>";
-      btnText.innerText = "聽自然發音 Aa";
-      actionIcon.innerText = "🐊";
-      actionText.innerText = "張嘴咬合";
-      // 辨識成功即刻採樣一次
+      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (點擊角色互動)</b>";
+      btnText.innerText = "自然發音 Aa";
       setTimeout(extractPaperColoring, 100);
       speakPhonics("A is for Alligator!");
     });
@@ -625,10 +867,8 @@
     targetBb.addEventListener("targetFound", () => {
       activeTarget = 'Bb';
       isTargetTracked = true;
-      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (著色同步中)</b>";
-      btnText.innerText = "聽自然發音 Bb";
-      actionIcon.innerText = "🐻";
-      actionText.innerText = "站立咆哮";
+      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (點擊角色互動)</b>";
+      btnText.innerText = "自然發音 Bb";
       setTimeout(extractPaperColoring, 100);
       speakPhonics("B is for Bear!");
     });
@@ -638,19 +878,17 @@
       hudText.innerText = "請將鏡頭對準學習單「Aa」或「Bb」";
     });
 
-    // 手動拍照鎖定按鈕 (推薦課堂使用：拍下後可拿起手機隨意轉角度觀賞)
     function captureAndLockColoring() {
       const ok = extractPaperColoring();
       const toast = document.getElementById('toast-msg');
       if (ok) {
-        toast.innerText = `✨ 已成功鎖定「${activeTarget === 'Aa' ? '鱷魚' : '棕熊'}」紙本塗鴉顏色！`;
-        toast.style.opacity = '1';
-        setTimeout(() => { toast.style.opacity = '0'; }, 2200);
-        speakPhonics("Awesome colors!");
+        toast.innerText = `✨ 已鎖定「${activeTarget === 'Aa' ? '鱷魚' : '棕熊'}」塗鴉！可任意旋轉觀看！`;
+        showToast();
+        triggerHapticFeedback();
+        speakPhonics("Great coloring!");
       } else {
-        toast.innerText = "請先將鏡頭對準學習單進行辨識！";
-        toast.style.opacity = '1';
-        setTimeout(() => { toast.style.opacity = '0'; }, 1800);
+        toast.innerText = "請先對準學習單進行辨識！";
+        showToast();
       }
     }
 
@@ -659,34 +897,13 @@
       const btn = document.getElementById('live-toggle-btn');
       if (isLiveSync) {
         btn.classList.add('active');
-        btn.innerHTML = '<span>🔴</span><span>即時連線同步: 開</span>';
+        btn.innerHTML = '<span>🔴</span><span>即時同步: 開</span>';
       } else {
         btn.classList.remove('active');
-        btn.innerHTML = '<span>⏸️</span><span>即時連線同步: 暫停</span>';
+        btn.innerHTML = '<span>⏸️</span><span>即時同步: 暫停</span>';
       }
     }
 
-    // 動作互動 (鱷魚張嘴 / 棕熊揮手)
-    function triggerAnimalAction() {
-      if (activeTarget === 'Aa') {
-        const snout = document.querySelector('#alligatorGroup').object3D.getObjectByName('snout');
-        if (snout) {
-          snout.rotation.x = -0.35;
-          setTimeout(() => { snout.rotation.x = 0; }, 400);
-          speakPhonics("Chomp!");
-        }
-      } else {
-        const head = document.querySelector('#bearGroup').object3D.getObjectByName('head');
-        if (head) {
-          head.rotation.y = 0.4;
-          setTimeout(() => { head.rotation.y = -0.4; }, 300);
-          setTimeout(() => { head.rotation.y = 0; }, 600);
-          speakPhonics("Growl!");
-        }
-      }
-    }
-
-    // 瀏覽器英語自然發音
     function speakPhonics(text) {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
