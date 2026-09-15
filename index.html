@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Quiver AR 字母著色 - 極致立體雕塑旗艦版</title>
+  <title>Quiver AR 字母著色 - 完美立體修復版</title>
   
   <!-- A-Frame & MindAR (開源 WebAR 核心) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -308,7 +308,7 @@
 
   <!-- 觸控手勢提示 -->
   <div id="touch-hint">
-    <span>✨</span><span>3D立體雕塑 • 法線曲面高光 • 肌肉光影 • 360°旋轉</span>
+    <span>✨</span><span>3D立體雕塑 • 全面彩繪映射 • 單指旋轉 360° • 雙指縮放</span>
   </div>
 
   <!-- 3D 拼字遊戲浮動層 -->
@@ -325,7 +325,7 @@
   <div id="snapshot-modal">
     <div id="snapshot-card">
       <img id="snapshot-img" alt="AR Snapshot" />
-      <div id="snapshot-caption">🐊 My 3D Volumetric Alligator</div>
+      <div id="snapshot-caption">🐊 My 3D Alligator</div>
       <div style="display:flex; gap:10px; justify-content:center; margin-top:14px;">
         <button class="action-btn btn-green" onclick="downloadSnapshot()">📥 儲存照片</button>
         <button class="action-btn btn-toggle" onclick="closeSnapshotModal()">關閉</button>
@@ -367,11 +367,11 @@
     device-orientation-permission-ui="enabled: false">
 
     <!-- 頂級攝影棚三點立體光照系統 (Studio 3-Point Cinematic Lighting) -->
-    <!-- 1. 溫暖主光源 (Key Light)：營造生動斜向立體高光與肌肉投影 -->
+    <!-- 1. 溫暖主光源 (Key Light) -->
     <a-entity light="type: directional; color: #fffdf5; intensity: 1.35; position: 1.0 2.2 2.0;"></a-entity>
-    <!-- 2. 冷色側補光 (Fill Light)：填補背光暗部，形成冷暖光影對比，通透不死黑 -->
+    <!-- 2. 冷色側補光 (Fill Light) -->
     <a-entity light="type: directional; color: #bae6fd; intensity: 0.65; position: -1.5 0.8 1.2;"></a-entity>
-    <!-- 3. 金色輪廓光 (Rim Light)：勾勒出背部脊椎鱗片與耳朵頂端的金色邊緣高光 -->
+    <!-- 3. 金色輪廓光 (Rim Light) -->
     <a-entity light="type: directional; color: #fef08a; intensity: 0.55; position: 0.2 -2.0 1.5;"></a-entity>
     <!-- 4. 柔和半球環境光 (Hemisphere Light) -->
     <a-entity light="type: hemisphere; color: #ffffff; groundColor: #334155; intensity: 0.75;"></a-entity>
@@ -380,17 +380,14 @@
 
     <!-- ================= 標靶 0：Aa Alligator ================= -->
     <a-entity id="targetAa" mindar-image-target="targetIndex: 0">
-      <!-- 3D 浮空立體字母 Aa -->
-      <a-entity id="letterMeshAa" position="-0.26 0.38 0.06"></a-entity>
+      <!-- 3D 浮空純金/糖果發音字母標籤 (高空懸浮，絕不遮擋紙面) -->
+      <a-entity id="letterMeshAa" position="-0.22 0.38 0.12"></a-entity>
 
-      <!-- 3D 鱷魚生動挺拔立姿雕塑 (站立於畫面上 32 度角，呼之欲出) -->
-      <a-entity id="alligatorRotator" position="0 -0.10 0.03">
-        <a-entity id="alligatorGroup" rotation="32 0 0">
-          <!-- 貼地柔和接觸陰影 (Ground Contact Shadow) -->
-          <a-plane id="gatorShadowPlane" width="1.15" height="0.48" position="0.02 -0.16 -0.01" rotation="0 0 0"
-                   material="transparent: true; opacity: 0.42; color: #090d16; roughness: 1;"></a-plane>
-          <!-- 沼澤半透明水波底板 -->
-          <a-plane id="waterPlaneAa" opacity="0.65" width="1.1" height="0.55" position="0 -0.17 -0.015" rotation="0 0 0"></a-plane>
+      <!-- 3D 鱷魚生動挺拔立姿雕塑 (無任何遮擋平面，360° 完美彩繪呈獻) -->
+      <a-entity id="alligatorRotator" position="0 -0.12 0.04">
+        <a-entity id="alligatorGroup" rotation="26 0 0">
+          <!-- 貼地柔和接觸陰影 (由 Canvas 生成純透明柔焦陰影，無任何白邊破圖) -->
+          <a-plane id="gatorShadowPlane" width="1.1" height="0.45" position="0.02 -0.01 -0.01" rotation="-90 0 0"></a-plane>
         </a-entity>
       </a-entity>
     </a-entity>
@@ -398,23 +395,20 @@
     <!-- ================= 標靶 1：Bb Bear ================= -->
     <a-entity id="targetBb" mindar-image-target="targetIndex: 1">
       <!-- 3D 浮空立體字母 Bb -->
-      <a-entity id="letterMeshBb" position="-0.26 0.38 0.06"></a-entity>
+      <a-entity id="letterMeshBb" position="-0.22 0.38 0.12"></a-entity>
 
-      <!-- 3D 棕熊雄壯立姿雕塑 (站立於畫面上 30 度角) -->
-      <a-entity id="bearRotator" position="0 -0.08 0.03">
-        <a-entity id="bearGroup" rotation="30 0 0">
-          <!-- 貼地接觸陰影 -->
-          <a-plane id="bearShadowPlane" width="0.9" height="0.58" position="0.02 -0.22 -0.01" rotation="0 0 0"
-                   material="transparent: true; opacity: 0.42; color: #090d16; roughness: 1;"></a-plane>
-          <!-- 大地底板 -->
-          <a-plane id="waterPlaneBb" opacity="0.5" width="1.0" height="0.6" position="0 -0.23 -0.015" rotation="0 0 0"></a-plane>
+      <!-- 3D 棕熊雄壯立姿雕塑 -->
+      <a-entity id="bearRotator" position="0 -0.10 0.04">
+        <a-entity id="bearGroup" rotation="24 0 0">
+          <!-- 貼地柔和陰影 -->
+          <a-plane id="bearShadowPlane" width="0.9" height="0.55" position="0.02 -0.01 -0.01" rotation="-90 0 0"></a-plane>
         </a-entity>
       </a-entity>
     </a-entity>
 
   </a-scene>
 
-  <!-- 旗艦版完整引擎：法線貼圖與 AO 烘焙、高階 PBR 光影、音效、拼字與拍照系統 -->
+  <!-- 旗艦版完整引擎：無遮擋純淨渲染、完美 UV 映射、音效、拼字與拍照系統 -->
   <script>
     /* =========================================================
        1. 全域狀態與自製低延遲 Web Audio 音效合成器
@@ -529,6 +523,18 @@
     const dynamicTexture = new THREE.CanvasTexture(textureCanvas);
     dynamicTexture.colorSpace = THREE.SRGBColorSpace || THREE.sRGBEncoding;
 
+    // 建立無邊界純柔焦接觸陰影貼圖 (純黑色中心漸變至 100% 透明)
+    const shadowCanvas = document.createElement('canvas');
+    shadowCanvas.width = 128;
+    shadowCanvas.height = 128;
+    const sctx = shadowCanvas.getContext('2d');
+    const radGrad = sctx.createRadialGradient(64, 64, 8, 64, 64, 60);
+    radGrad.addColorStop(0, 'rgba(15, 23, 42, 0.42)');
+    radGrad.addColorStop(1, 'rgba(15, 23, 42, 0.0)');
+    sctx.fillStyle = radGrad;
+    sctx.fillRect(0, 0, 128, 128);
+    const softShadowTexture = new THREE.CanvasTexture(shadowCanvas);
+
     const previewCanvas = document.getElementById('preview-canvas');
     const prevCtx = previewCanvas.getContext('2d');
     prevCtx.fillStyle = '#ffffff';
@@ -539,175 +545,7 @@
     const clickableObjects = [];
 
     /* =========================================================
-       3. 核心突破：程序化法線貼圖 (Normal Map) 與環境光遮蔽 (AO Map)
-       讓學生無論塗什麼顏色，均呈現迪士尼級肌肉光影、脊鱗突起與立體雕塑感！
-       ========================================================= */
-    function generateProceduralMaps(type) {
-      const W = 256, H = 256;
-      const hCanvas = document.createElement('canvas');
-      hCanvas.width = W; hCanvas.height = H;
-      const hCtx = hCanvas.getContext('2d');
-      hCtx.fillStyle = '#808080';
-      hCtx.fillRect(0, 0, W, H);
-
-      // 繪製高程圖 (Heightmap)：白色代表凸起隆起，深灰色代表凹陷暗處
-      if (type === 'alligator') {
-        // 身體與脊椎隆起漸層
-        const gradBody = hCtx.createRadialGradient(130, 128, 10, 130, 128, 90);
-        gradBody.addColorStop(0, '#ffffff');
-        gradBody.addColorStop(0.6, '#d0d0d0');
-        gradBody.addColorStop(1, '#808080');
-        hCtx.fillStyle = gradBody;
-        hCtx.beginPath();
-        hCtx.ellipse(130, 128, 110, 45, 0, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 頭部與嘴吻隆起
-        const gradHead = hCtx.createRadialGradient(45, 125, 5, 45, 125, 40);
-        gradHead.addColorStop(0, '#ffffff');
-        gradHead.addColorStop(1, '#808080');
-        hCtx.fillStyle = gradHead;
-        hCtx.beginPath();
-        hCtx.ellipse(45, 125, 38, 26, 0, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 鱷魚立體背部骨板/鋸齒鱗甲 (Dorsal Scutes) 高凸起
-        hCtx.fillStyle = '#ffffff';
-        for (let i = 0; i < 9; i++) {
-          const sx = 80 + i * 16;
-          const sy = 104 - Math.sin(i / 8 * Math.PI) * 12;
-          hCtx.beginPath();
-          hCtx.arc(sx, sy, 8, 0, Math.PI * 2);
-          hCtx.fill();
-        }
-
-        // 眼睛周圍眶骨突起
-        hCtx.fillStyle = '#ffffff';
-        hCtx.beginPath();
-        hCtx.arc(58, 106, 9, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 下顎與四肢深色陰影凹陷 (Crevices)
-        hCtx.fillStyle = '#404040';
-        hCtx.beginPath();
-        hCtx.ellipse(95, 155, 14, 6, 0.3, 0, Math.PI * 2);
-        hCtx.ellipse(180, 155, 16, 6, -0.3, 0, Math.PI * 2);
-        hCtx.fill();
-
-      } else if (type === 'bear') {
-        // 棕熊渾厚身軀與後臀隆起
-        const gradBody = hCtx.createRadialGradient(150, 125, 15, 150, 125, 85);
-        gradBody.addColorStop(0, '#ffffff');
-        gradBody.addColorStop(0.7, '#cccccc');
-        gradBody.addColorStop(1, '#808080');
-        hCtx.fillStyle = gradBody;
-        hCtx.beginPath();
-        hCtx.ellipse(150, 125, 80, 60, 0, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 肩部與背部肌肉駝峰
-        const gradShoulder = hCtx.createRadialGradient(95, 95, 10, 95, 95, 50);
-        gradShoulder.addColorStop(0, '#ffffff');
-        gradShoulder.addColorStop(1, '#808080');
-        hCtx.fillStyle = gradShoulder;
-        hCtx.beginPath();
-        hCtx.ellipse(95, 95, 45, 38, -0.2, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 熊頭部與圓潤嘴吻
-        const gradHead = hCtx.createRadialGradient(50, 130, 8, 50, 130, 42);
-        gradHead.addColorStop(0, '#ffffff');
-        gradHead.addColorStop(1, '#808080');
-        hCtx.fillStyle = gradHead;
-        hCtx.beginPath();
-        hCtx.ellipse(50, 130, 36, 32, 0, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 圓耳朵骨隆起
-        hCtx.fillStyle = '#ffffff';
-        hCtx.beginPath();
-        hCtx.arc(68, 85, 12, 0, Math.PI * 2);
-        hCtx.fill();
-
-        // 耳窩凹陷陰影
-        hCtx.fillStyle = '#303030';
-        hCtx.beginPath();
-        hCtx.arc(68, 86, 6, 0, Math.PI * 2);
-        hCtx.fill();
-      }
-
-      // 從高程圖轉換為切線空間法線貼圖 (Normal Map) 與環境光遮蔽貼圖 (AO Map)
-      const hData = hCtx.getImageData(0, 0, W, H).data;
-
-      const nCanvas = document.createElement('canvas');
-      nCanvas.width = W; nCanvas.height = H;
-      const nCtx = nCanvas.getContext('2d');
-      const nImgData = nCtx.createImageData(W, H);
-      const nData = nImgData.data;
-
-      const aoCanvas = document.createElement('canvas');
-      aoCanvas.width = W; aoCanvas.height = H;
-      const aoCtx = aoCanvas.getContext('2d');
-      const aoImgData = aoCtx.createImageData(W, H);
-      const aoData = aoImgData.data;
-
-      const strength = 3.2;
-
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          const idx = (y * W + x) * 4;
-
-          const xL = (x > 0) ? x - 1 : x;
-          const xR = (x < W - 1) ? x + 1 : x;
-          const yU = (y > 0) ? y - 1 : y;
-          const yD = (y < H - 1) ? y + 1 : y;
-
-          const hL = hData[(y * W + xL) * 4] / 255.0;
-          const hR = hData[(y * W + xR) * 4] / 255.0;
-          const hU = hData[(yU * W + x) * 4] / 255.0;
-          const hD = hData[(yD * W + x) * 4] / 255.0;
-
-          // Sobel 切線向量
-          const dx = (hR - hL) * strength;
-          const dy = (hD - hU) * strength;
-          const len = Math.sqrt(dx * dx + dy * dy + 1.0);
-
-          const nx = -dx / len;
-          const ny = -dy / len;
-          const nz = 1.0 / len;
-
-          // 法線貼圖色彩 (RGB = Tangent Normal)
-          nData[idx]     = Math.round((nx * 0.5 + 0.5) * 255);
-          nData[idx + 1] = Math.round((ny * 0.5 + 0.5) * 255);
-          nData[idx + 2] = Math.round((nz * 0.5 + 0.5) * 255);
-          nData[idx + 3] = 255;
-
-          // 環境光遮蔽 AO：低窪處暗部深化
-          const centerH = hData[idx] / 255.0;
-          const aoVal = Math.min(255, Math.max(80, Math.round((0.55 + centerH * 0.45) * 255)));
-          aoData[idx]     = aoVal;
-          aoData[idx + 1] = aoVal;
-          aoData[idx + 2] = aoVal;
-          aoData[idx + 3] = 255;
-        }
-      }
-
-      nCtx.putImageData(nImgData, 0, 0);
-      aoCtx.putImageData(aoImgData, 0, 0);
-
-      const normalTex = new THREE.CanvasTexture(nCanvas);
-      normalTex.wrapS = THREE.ClampToEdgeWrapping;
-      normalTex.wrapT = THREE.ClampToEdgeWrapping;
-
-      const aoTex = new THREE.CanvasTexture(aoCanvas);
-      aoTex.wrapS = THREE.ClampToEdgeWrapping;
-      aoTex.wrapT = THREE.ClampToEdgeWrapping;
-
-      return { normalTex, aoTex };
-    }
-
-    /* =========================================================
-       4. 建立極致立體雕塑 (Volumetric 3D Sculptures)
+       3. 核心突破：精準 UV 映射演算法 (徹底修正上下顛倒問題)
        ========================================================= */
     const sceneEl = document.querySelector('a-scene');
 
@@ -715,10 +553,43 @@
       buildVolumetricAlligator();
       buildVolumetricBear();
       buildCandyLetters();
+      setupShadowPlanes();
       setupTouchRaycaster();
     });
 
-    // UV 映射演算法：將幾何體頂點完美對齊紙面塗色區
+    function setupShadowPlanes() {
+      const gShadow = document.querySelector('#gatorShadowPlane');
+      if (gShadow) {
+        gShadow.addEventListener('loaded', () => {
+          const mesh = gShadow.getObject3D('mesh');
+          if (mesh) {
+            mesh.material = new THREE.MeshBasicMaterial({
+              map: softShadowTexture,
+              transparent: true,
+              opacity: 0.85,
+              depthWrite: false
+            });
+          }
+        });
+      }
+      const bShadow = document.querySelector('#bearShadowPlane');
+      if (bShadow) {
+        bShadow.addEventListener('loaded', () => {
+          const mesh = bShadow.getObject3D('mesh');
+          if (mesh) {
+            mesh.material = new THREE.MeshBasicMaterial({
+              map: softShadowTexture,
+              transparent: true,
+              opacity: 0.85,
+              depthWrite: false
+            });
+          }
+        });
+      }
+    }
+
+    // 正確計算的三維 UV 映射公式
+    // uMin, vMin, uMax, vMax 均為以圖紙左上角為 (0,0)、右下角為 (1,1) 的比例坐標
     function applyModelUV(geom, uMin, vMin, uMax, vMax) {
       geom.computeBoundingBox();
       const bb = geom.boundingBox;
@@ -730,42 +601,48 @@
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const y = pos.getY(i);
+
+        // nx: 0 (最左側吻部) 到 1 (最右側尾巴)
         const nx = Math.max(0, Math.min(1, (x - bb.min.x) / width));
+        // ny: 0 (最下方四肢腳底) 到 1 (最上方背脊)
         const ny = Math.max(0, Math.min(1, (y - bb.min.y) / height));
+
+        // 水平 X 對應 U: 從 uMin 到 uMax
         const u = uMin + nx * (uMax - uMin);
-        const v = 1.0 - (vMin + ny * (vMax - vMin));
+        
+        // 核心修正：Three.js CanvasTexture 預設 v=0 為底部，v=1 為頂部
+        // 紙面上的頂部 (背脊) 位於 Canvas 的 vMin 處，對應 Three.js 的 v = 1.0 - vMin
+        // 紙面上的底部 (四肢) 位於 Canvas 的 vMax 處，對應 Three.js 的 v = 1.0 - vMax
+        // 因此當 ny 從 0 (四肢) 增加到 1 (背脊) 時，v 應從 (1 - vMax) 升到 (1 - vMin)：
+        const v = (1.0 - vMax) + ny * (vMax - vMin);
+
         uv.setXY(i, u, v);
       }
       uv.needsUpdate = true;
-      // 為 AO 貼圖建立 uv2 屬性
-      geom.attributes.uv2 = geom.attributes.uv;
       geom.computeVertexNormals();
       geom.normalsNeedUpdate = true;
     }
 
+    /* =========================================================
+       4. 建立無遮擋 3D 模型
+       ========================================================= */
     function buildVolumetricAlligator() {
       const group = document.querySelector('#alligatorGroup').object3D;
-      const maps = generateProceduralMaps('alligator');
 
-      // 迪士尼/皮克斯級玩具陶瓷光澤材質 (PBR Specular Gloss + Normal + AO)
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        normalMap: maps.normalTex,
-        normalScale: new THREE.Vector2(1.8, 1.8),
-        aoMap: maps.aoTex,
-        aoMapIntensity: 1.25,
-        roughness: 0.30,
-        metalness: 0.08
+        roughness: 0.32,
+        metalness: 0.05
       });
 
-      // 鱷魚主體流線輪廓 (吻部、背部、尾巴、腹部)
+      // 鱷魚主體流線輪廓 (吻部、背部鋸齒、尾巴、四肢)
       const gatorShape = new THREE.Shape();
       gatorShape.moveTo(-0.48, 0.02);
       gatorShape.quadraticCurveTo(-0.42, 0.06, -0.32, 0.08);
       gatorShape.quadraticCurveTo(-0.25, 0.12, -0.22, 0.13);
       gatorShape.quadraticCurveTo(-0.18, 0.11, -0.12, 0.11);
       
-      // 鋸齒狀脊背突起
+      // 鋸齒背部突起
       gatorShape.lineTo(-0.06, 0.13);
       gatorShape.lineTo(-0.02, 0.11);
       gatorShape.lineTo( 0.04, 0.13);
@@ -784,7 +661,7 @@
       gatorShape.quadraticCurveTo(0.18, -0.18, 0.15, -0.16);
       gatorShape.lineTo(0.18, -0.06);
 
-      // 腹部線條
+      // 腹部
       gatorShape.quadraticCurveTo(0.05, -0.06, -0.05, -0.06);
 
       // 前腳與爪部
@@ -792,22 +669,22 @@
       gatorShape.quadraticCurveTo(-0.16, -0.18, -0.19, -0.16);
       gatorShape.lineTo(-0.15, -0.04);
 
-      // 顎部
+      // 顎部吻端
       gatorShape.quadraticCurveTo(-0.30, -0.03, -0.44, -0.01);
       gatorShape.lineTo(-0.48, 0.02);
 
-      // 極致圓潤厚實倒角設定 (厚度 0.09，圓角 0.035)
       const extrudeSettings = {
-        depth: 0.085,
+        depth: 0.08,
         bevelEnabled: true,
-        bevelSegments: 8,
-        steps: 4,
-        bevelSize: 0.032,
-        bevelThickness: 0.038
+        bevelSegments: 6,
+        steps: 2,
+        bevelSize: 0.025,
+        bevelThickness: 0.03
       };
 
       const gatorGeom = new THREE.ExtrudeGeometry(gatorShape, extrudeSettings);
-      applyModelUV(gatorGeom, 0.10, 0.50, 0.90, 0.85);
+      // 精準量測之學習單鱷魚線條座標 (X: 8.1% ~ 91.8%, Y: 48.0% ~ 77.7%)
+      applyModelUV(gatorGeom, 0.081, 0.480, 0.918, 0.777);
 
       const gatorMesh = new THREE.Mesh(gatorGeom, mat);
       gatorMesh.name = "volumetric_alligator";
@@ -815,72 +692,23 @@
       group.add(gatorMesh);
       clickableObjects.push(gatorMesh);
 
-      // 3D 骨板背脊立體鱗刺 (增添立體層次感)
-      const ridgeMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        map: dynamicTexture,
-        roughness: 0.25,
-        metalness: 0.05
-      });
-      const ridgeGeom = new THREE.ConeGeometry(0.018, 0.04, 4);
-      ridgeGeom.rotateX(Math.PI / 2);
-      for (let i = 0; i < 7; i++) {
-        const ridge = new THREE.Mesh(ridgeGeom, ridgeMat);
-        const rx = -0.08 + i * 0.052;
-        const ry = 0.12 - Math.abs(i - 3) * 0.006;
-        ridge.position.set(rx, ry, 0.10);
-        ridge.rotation.z = -0.15 + (i - 3) * 0.05;
-        group.add(ridge);
-      }
-
-      // 3D 晶亮眼珠與垂直貓眼瞳孔
+      // 3D 晶亮金黃眼珠與垂直瞳孔
       const eyeMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.12, metalness: 0.2 });
       const pupilMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.026, 16, 16), eyeMat);
-      eye.position.set(-0.23, 0.11, 0.115);
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 10), pupilMat);
-      pupil.position.set(-0.235, 0.11, 0.138);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 16, 16), eyeMat);
+      eye.position.set(-0.23, 0.11, 0.095);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 10, 10), pupilMat);
+      pupil.position.set(-0.235, 0.11, 0.115);
       pupil.scale.set(0.4, 1.2, 0.4);
       group.add(eye);
       group.add(pupil);
-
-      // 前景腿部厚度層次感 (提升縱深)
-      const foreLegGeom = new THREE.CylinderGeometry(0.022, 0.026, 0.11, 12);
-      const legMesh = new THREE.Mesh(foreLegGeom, mat);
-      legMesh.position.set(-0.14, -0.10, 0.10);
-      legMesh.rotation.z = 0.25;
-      group.add(legMesh);
-
-      // 水波底板
-      const waterEl = document.querySelector('#waterPlaneAa');
-      if (waterEl) {
-        waterEl.addEventListener('loaded', () => {
-          const wMesh = waterEl.getObject3D('mesh');
-          if (wMesh) {
-            wMesh.material = new THREE.MeshStandardMaterial({
-              map: dynamicTexture,
-              transparent: true,
-              opacity: 0.72,
-              roughness: 0.12,
-              metalness: 0.15
-            });
-            wMesh.name = "water";
-            clickableObjects.push(wMesh);
-          }
-        });
-      }
     }
 
     function buildVolumetricBear() {
       const group = document.querySelector('#bearGroup').object3D;
-      const maps = generateProceduralMaps('bear');
 
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        normalMap: maps.normalTex,
-        normalScale: new THREE.Vector2(2.0, 2.0),
-        aoMap: maps.aoTex,
-        aoMapIntensity: 1.3,
         roughness: 0.38,
         metalness: 0.05
       });
@@ -920,16 +748,17 @@
       bearShape.quadraticCurveTo(-0.22, -0.12, -0.30, -0.10);
 
       const extrudeSettings = {
-        depth: 0.10,
+        depth: 0.09,
         bevelEnabled: true,
-        bevelSegments: 8,
-        steps: 4,
-        bevelSize: 0.035,
-        bevelThickness: 0.042
+        bevelSegments: 6,
+        steps: 2,
+        bevelSize: 0.028,
+        bevelThickness: 0.035
       };
 
       const bearGeom = new THREE.ExtrudeGeometry(bearShape, extrudeSettings);
-      applyModelUV(bearGeom, 0.12, 0.44, 0.90, 0.92);
+      // 精準量測之學習單棕熊線條座標 (X: 8.1% ~ 91.8%, Y: 42.0% ~ 87.9%)
+      applyModelUV(bearGeom, 0.081, 0.420, 0.918, 0.879);
 
       const bearMesh = new THREE.Mesh(bearGeom, mat);
       bearMesh.name = "volumetric_bear";
@@ -937,138 +766,136 @@
       group.add(bearMesh);
       clickableObjects.push(bearMesh);
 
-      // 棕熊 3D 圓潤耳朵
-      const earMat = new THREE.MeshStandardMaterial({ map: dynamicTexture, roughness: 0.35 });
-      const ear = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.012, 10, 16), earMat);
-      ear.position.set(-0.16, 0.22, 0.11);
-      ear.rotation.y = 0.3;
-      group.add(ear);
-
-      // 棕熊立體黑色鼻頭
+      // 棕熊 3D 黑色鼻頭
       const noseMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.15 });
       const nose = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 12), noseMat);
-      nose.position.set(-0.31, 0.02, 0.11);
+      nose.position.set(-0.31, 0.02, 0.10);
       group.add(nose);
 
-      // 棕熊圓滾黑眼珠
+      // 棕熊黑眼珠
       const eyeMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.08 });
       const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 12, 12), eyeMat);
-      eye.position.set(-0.23, 0.09, 0.125);
+      eye.position.set(-0.23, 0.09, 0.11);
       group.add(eye);
     }
 
+    // 浮空立體糖果字母（懸浮於空中，不覆蓋紙面線條）
     function buildCandyLetters() {
-      const mat = new THREE.MeshStandardMaterial({
-        map: dynamicTexture,
-        roughness: 0.22,
-        metalness: 0.08
+      // 字母採用精緻的金色/彩糖光澤材質，不再強行採樣未著色的白紙
+      const letterMatA = new THREE.MeshStandardMaterial({
+        color: 0xfbbf24,
+        roughness: 0.25,
+        metalness: 0.35
+      });
+      const letterMatB = new THREE.MeshStandardMaterial({
+        color: 0x60a5fa,
+        roughness: 0.25,
+        metalness: 0.35
       });
 
       const extrudeSettings = {
-        depth: 0.065,
+        depth: 0.05,
         bevelEnabled: true,
-        bevelSegments: 6,
-        steps: 2,
-        bevelSize: 0.022,
-        bevelThickness: 0.025
+        bevelSegments: 4,
+        steps: 1,
+        bevelSize: 0.015,
+        bevelThickness: 0.018
       };
 
       // 大寫 A
       const shapeA = new THREE.Shape();
-      shapeA.moveTo(-0.18, -0.16);
-      shapeA.lineTo(-0.06,  0.18);
-      shapeA.lineTo( 0.06,  0.18);
-      shapeA.lineTo( 0.18, -0.16);
-      shapeA.lineTo( 0.09, -0.16);
-      shapeA.lineTo( 0.05, -0.04);
-      shapeA.lineTo(-0.05, -0.04);
-      shapeA.lineTo(-0.09, -0.16);
+      shapeA.moveTo(-0.16, -0.14);
+      shapeA.lineTo(-0.05,  0.16);
+      shapeA.lineTo( 0.05,  0.16);
+      shapeA.lineTo( 0.16, -0.14);
+      shapeA.lineTo( 0.08, -0.14);
+      shapeA.lineTo( 0.04, -0.04);
+      shapeA.lineTo(-0.04, -0.04);
+      shapeA.lineTo(-0.08, -0.14);
       shapeA.closePath();
 
       const holeA = new THREE.Path();
-      holeA.moveTo( 0.0,   0.10);
-      holeA.lineTo(-0.026, 0.02);
-      holeA.lineTo( 0.026, 0.02);
+      holeA.moveTo( 0.0,   0.08);
+      holeA.lineTo(-0.022, 0.02);
+      holeA.lineTo( 0.022, 0.02);
       holeA.closePath();
       shapeA.holes.push(holeA);
 
       // 小寫 a
       const shape_a = new THREE.Shape();
-      shape_a.moveTo(0.18, -0.16);
-      shape_a.lineTo(0.25, -0.16);
-      shape_a.lineTo(0.25,  0.04);
-      shape_a.quadraticCurveTo(0.23, 0.09, 0.16, 0.09);
-      shape_a.quadraticCurveTo(0.10, 0.09, 0.08, 0.04);
-      shape_a.lineTo(0.08, -0.08);
-      shape_a.quadraticCurveTo(0.12, -0.16, 0.18, -0.16);
+      shape_a.moveTo(0.16, -0.14);
+      shape_a.lineTo(0.22, -0.14);
+      shape_a.lineTo(0.22,  0.03);
+      shape_a.quadraticCurveTo(0.20, 0.08, 0.14, 0.08);
+      shape_a.quadraticCurveTo(0.08, 0.08, 0.07, 0.03);
+      shape_a.lineTo(0.07, -0.07);
+      shape_a.quadraticCurveTo(0.10, -0.14, 0.16, -0.14);
       shape_a.closePath();
 
       const geomA = new THREE.ExtrudeGeometry([shapeA, shape_a], extrudeSettings);
-      applyModelUV(geomA, 0.14, 0.08, 0.86, 0.44);
-
-      const meshAa = new THREE.Mesh(geomA, mat);
+      const meshAa = new THREE.Mesh(geomA, letterMatA);
       meshAa.name = "letter_Aa";
+      meshAa.scale.set(0.75, 0.75, 0.75);
       document.querySelector('#letterMeshAa').object3D.add(meshAa);
       clickableObjects.push(meshAa);
 
       // 大寫 B
       const shapeB = new THREE.Shape();
-      shapeB.moveTo(-0.16, -0.16);
-      shapeB.lineTo(-0.16,  0.18);
-      shapeB.lineTo( 0.03,  0.18);
-      shapeB.quadraticCurveTo(0.15, 0.18, 0.15, 0.04);
-      shapeB.quadraticCurveTo(0.15, 0.00, 0.08, -0.01);
-      shapeB.quadraticCurveTo(0.16, -0.02, 0.16, -0.10);
-      shapeB.quadraticCurveTo(0.16, -0.16, 0.04, -0.16);
+      shapeB.moveTo(-0.14, -0.14);
+      shapeB.lineTo(-0.14,  0.16);
+      shapeB.lineTo( 0.02,  0.16);
+      shapeB.quadraticCurveTo(0.13, 0.16, 0.13, 0.03);
+      shapeB.quadraticCurveTo(0.13, 0.00, 0.07, -0.01);
+      shapeB.quadraticCurveTo(0.14, -0.02, 0.14, -0.09);
+      shapeB.quadraticCurveTo(0.14, -0.14, 0.03, -0.14);
       shapeB.closePath();
 
       const holeB1 = new THREE.Path();
-      holeB1.moveTo(-0.09,  0.04);
-      holeB1.lineTo(-0.09,  0.12);
-      holeB1.lineTo( 0.02,  0.12);
-      holeB1.quadraticCurveTo(0.07, 0.12, 0.07, 0.08);
-      holeB1.quadraticCurveTo(0.07, 0.04, 0.02, 0.04);
+      holeB1.moveTo(-0.08,  0.03);
+      holeB1.lineTo(-0.08,  0.10);
+      holeB1.lineTo( 0.01,  0.10);
+      holeB1.quadraticCurveTo(0.06, 0.10, 0.06, 0.065);
+      holeB1.quadraticCurveTo(0.06, 0.03, 0.01, 0.03);
       holeB1.closePath();
       shapeB.holes.push(holeB1);
 
       const holeB2 = new THREE.Path();
-      holeB2.moveTo(-0.09, -0.10);
-      holeB2.lineTo(-0.09, -0.02);
-      holeB2.lineTo( 0.03, -0.02);
-      holeB2.quadraticCurveTo(0.08, -0.02, 0.08, -0.06);
-      holeB2.quadraticCurveTo(0.08, -0.10, 0.03, -0.10);
+      holeB2.moveTo(-0.08, -0.09);
+      holeB2.lineTo(-0.08, -0.02);
+      holeB2.lineTo( 0.02, -0.02);
+      holeB2.quadraticCurveTo(0.07, -0.02, 0.07, -0.055);
+      holeB2.quadraticCurveTo(0.07, -0.09, 0.02, -0.09);
       holeB2.closePath();
       shapeB.holes.push(holeB2);
 
       // 小寫 b
       const shape_b = new THREE.Shape();
-      shape_b.moveTo(0.18, -0.16);
-      shape_b.lineTo(0.18,  0.18);
-      shape_b.lineTo(0.24,  0.18);
-      shape_b.lineTo(0.24,  0.06);
-      shape_b.quadraticCurveTo(0.33, 0.06, 0.33, -0.05);
-      shape_b.quadraticCurveTo(0.33, -0.16, 0.24, -0.16);
+      shape_b.moveTo(0.16, -0.14);
+      shape_b.lineTo(0.16,  0.16);
+      shape_b.lineTo(0.21,  0.16);
+      shape_b.lineTo(0.21,  0.05);
+      shape_b.quadraticCurveTo(0.29, 0.05, 0.29, -0.04);
+      shape_b.quadraticCurveTo(0.29, -0.14, 0.21, -0.14);
       shape_b.closePath();
 
       const hole_b = new THREE.Path();
-      hole_b.moveTo(0.24, -0.10);
-      hole_b.lineTo(0.24, -0.00);
-      hole_b.quadraticCurveTo(0.28, -0.00, 0.28, -0.05);
-      hole_b.quadraticCurveTo(0.28, -0.10, 0.24, -0.10);
+      hole_b.moveTo(0.21, -0.09);
+      hole_b.lineTo(0.21, -0.00);
+      hole_b.quadraticCurveTo(0.25, -0.00, 0.25, -0.045);
+      hole_b.quadraticCurveTo(0.25, -0.09, 0.21, -0.09);
       hole_b.closePath();
       shape_b.holes.push(hole_b);
 
       const geomB = new THREE.ExtrudeGeometry([shapeB, shape_b], extrudeSettings);
-      applyModelUV(geomB, 0.14, 0.08, 0.86, 0.44);
-
-      const meshBb = new THREE.Mesh(geomB, mat);
+      const meshBb = new THREE.Mesh(geomB, letterMatB);
       meshBb.name = "letter_Bb";
+      meshBb.scale.set(0.75, 0.75, 0.75);
       document.querySelector('#letterMeshBb').object3D.add(meshBb);
       clickableObjects.push(meshBb);
     }
 
     /* =========================================================
-       5. 電腦視覺：自動白平衡、純白淨化與感性色彩提亮
+       5. 電腦視覺：自動白平衡、純白淨化與色彩飽和度優化
        ========================================================= */
     function getVideoElement() {
       if (!videoEl) videoEl = document.querySelector('video');
@@ -1113,7 +940,6 @@
       }
 
       warpQuadToCanvas(v, scrCorners, textureCanvas);
-      // 執行核心淨白與立體色彩提亮
       cleanAndEnhanceColoring(texCtx, textureCanvas.width, textureCanvas.height);
 
       dynamicTexture.needsUpdate = true;
@@ -1122,7 +948,6 @@
       return true;
     }
 
-    // 核心演算法：清除黑色線條 + 無塗色純白玉雕塑 + 學生彩繪透亮立體
     function cleanAndEnhanceColoring(ctx, W, H) {
       const imgData = ctx.getImageData(0, 0, W, H);
       const data = imgData.data;
@@ -1143,9 +968,9 @@
       const Wg = (wCount > 50) ? (sumWg / wCount) : 180;
       const Wb = (wCount > 50) ? (sumWb / wCount) : 165;
 
-      const threshold = 0.088;
+      const threshold = 0.085;
 
-      // 步驟 B：正規化色度距 (ChromaDist) 與感知色彩飽和增強
+      // 步驟 B：正規化色度距 (ChromaDist) 與自然彩度增益
       for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
@@ -1176,7 +1001,6 @@
           let cg = l + (gn - l) * boost;
           let cb = l + (bn - l) * boost;
 
-          // 微伽馬提亮，使蠟筆與色鉛筆在 3D 模型上顯得鮮豔奪目
           cr = Math.pow(Math.max(0, cr), 0.92);
           cg = Math.pow(Math.max(0, cg), 0.92);
           cb = Math.pow(Math.max(0, cb), 0.92);
@@ -1256,7 +1080,7 @@
     }
 
     /* =========================================================
-       6. 呼吸動力學與微擺動 (Living Biome Dynamics)
+       6. 待機微呼吸動作循環
        ========================================================= */
     let globalClock = 0;
     let lastExtractTime = 0;
@@ -1268,29 +1092,26 @@
         if (activeTarget === 'Aa') {
           const gator = document.querySelector('#alligatorGroup')?.object3D;
           if (gator) {
-            // 逼真肉體微呼吸與尾巴波浪擺動
-            gator.rotation.z = Math.sin(globalClock * 1.6) * 0.035;
-            gator.position.y = Math.sin(globalClock * 2.2) * 0.006;
+            gator.rotation.z = Math.sin(globalClock * 1.6) * 0.03;
+            gator.position.y = Math.sin(globalClock * 2.2) * 0.005;
           }
         } else {
           const bear = document.querySelector('#bearGroup')?.object3D;
           if (bear) {
-            // 棕熊厚實呼吸與前後巡視微動
-            bear.rotation.y = Math.sin(globalClock * 1.2) * 0.04;
+            bear.rotation.y = Math.sin(globalClock * 1.2) * 0.035;
             bear.position.y = Math.sin(globalClock * 1.8) * 0.005;
           }
         }
 
-        // 浮空字母糖果懸浮動畫
+        // 浮空立體字母懸浮動態
         const activeLetter = (activeTarget === 'Aa')
           ? document.querySelector('#letterMeshAa')?.object3D
           : document.querySelector('#letterMeshBb')?.object3D;
         if (activeLetter) {
-          activeLetter.position.z = 0.06 + Math.sin(globalClock * 2.5) * 0.015;
+          activeLetter.position.z = 0.12 + Math.sin(globalClock * 2.5) * 0.015;
           activeLetter.rotation.y = Math.sin(globalClock * 1.5) * 0.12;
         }
 
-        // 即時色彩採樣同步 (每秒約 5 次)
         if (isLiveSync && (timestamp - lastExtractTime > 200)) {
           extractPaperColoring();
           lastExtractTime = timestamp;
@@ -1310,11 +1131,11 @@
     targetAaEl.addEventListener('targetFound', () => {
       activeTarget = 'Aa';
       isTargetTracked = true;
-      hudText.innerText = "✨ 發現學習單 Aa！鱷魚立體活現";
+      hudText.innerText = "✨ 發現學習單 Aa！鱷魚 3D 立體浮現";
       btnText.innerText = "自然發音 /æ/";
       document.querySelector('#action-icon').innerText = "🐊";
       document.querySelector('#action-label').innerText = "大口咬合";
-      showToast("🐊 鱷魚 3D 立體浮現！");
+      showToast("🐊 鱷魚 3D 浮現！完整立體彩繪呈獻");
       playSFX('splash');
       if (isLiveSync) extractPaperColoring();
     });
@@ -1329,11 +1150,11 @@
     targetBbEl.addEventListener('targetFound', () => {
       activeTarget = 'Bb';
       isTargetTracked = true;
-      hudText.innerText = "✨ 發現學習單 Bb！棕熊立體活現";
+      hudText.innerText = "✨ 發現學習單 Bb！棕熊 3D 立體浮現";
       btnText.innerText = "自然發音 /b/";
       document.querySelector('#action-icon').innerText = "🐻";
       document.querySelector('#action-label').innerText = "雄壯咆哮";
-      showToast("🐻 棕熊 3D 立體浮現！");
+      showToast("🐻 棕熊 3D 浮現！完整立體彩繪呈獻");
       playSFX('roar');
       if (isLiveSync) extractPaperColoring();
     });
@@ -1465,7 +1286,7 @@
     }
 
     /* =========================================================
-       9. 核心特色功能：鎖定、發音、動作、拼字挑戰、拍照相框
+       9. 核心功能：鎖定、發音、動作、拼字挑戰、拍照相框
        ========================================================= */
     function captureAndLockColoring() {
       const ok = extractPaperColoring();
@@ -1523,11 +1344,11 @@
         let t = 0;
         const roar = setInterval(() => {
           t += 0.25;
-          bear.rotation.x = 0.52 + Math.sin(t) * 0.25;
+          bear.rotation.x = 0.45 + Math.sin(t) * 0.25;
           bear.scale.set(1.0 + Math.sin(t) * 0.12, 1.0 + Math.sin(t) * 0.12, 1.0);
           if (t >= Math.PI) {
             clearInterval(roar);
-            bear.rotation.x = 0.52;
+            bear.rotation.x = 0.45;
             bear.scale.set(1, 1, 1);
           }
         }, 20);
@@ -1548,7 +1369,6 @@
       showToast("🔄 姿態與縮放已重設");
     }
 
-    // 筆順示範立體光球導引
     function triggerStrokeTracing() {
       initAudioContext();
       showToast("✨ 3D 筆順光球導引中...");
@@ -1562,14 +1382,14 @@
       targetObj.add(orb);
 
       const pathAa = [
-        [-0.18, -0.16], [-0.06, 0.18], [0.06, 0.18], [0.18, -0.16],
-        [-0.05, -0.04], [0.05, -0.04]
+        [-0.16, -0.14], [-0.05, 0.16], [0.05, 0.16], [0.16, -0.14],
+        [-0.04, -0.04], [0.04, -0.04]
       ];
 
       let idx = 0;
       const stepOrb = () => {
         if (idx < pathAa.length) {
-          orb.position.set(pathAa[idx][0], pathAa[idx][1], 0.12);
+          orb.position.set(pathAa[idx][0], pathAa[idx][1], 0.08);
           playSFX('bubble');
           idx++;
           setTimeout(stepOrb, 300);
@@ -1582,7 +1402,6 @@
       stepOrb();
     }
 
-    // 拼字氣泡挑戰迷你遊戲
     let targetWord = "";
     let currentLetters = [];
 
@@ -1613,7 +1432,6 @@
       const bubbles = document.getElementById('spelling-bubbles');
       bubbles.innerHTML = "";
       const letters = targetWord.split('');
-      // 加入干擾字母
       const disturbers = ['X', 'K', 'M', 'P', 'T'];
       letters.push(disturbers[Math.floor(Math.random() * disturbers.length)]);
       letters.sort(() => Math.random() - 0.5);
@@ -1651,7 +1469,6 @@
       document.getElementById('spelling-overlay').style.display = 'none';
     }
 
-    // Polaroid 拍照合影相框
     function takeARSnapshot() {
       playSFX('shutter');
       const v = getVideoElement();
@@ -1662,14 +1479,11 @@
       snapCanvas.height = 960;
       const sCtx = snapCanvas.getContext('2d');
 
-      // 1. 繪製相機底圖
       sCtx.drawImage(v, 0, 0, snapCanvas.width, snapCanvas.height);
 
-      // 2. 繪製 A-Frame WebGL 3D 渲染圖層
       const webglCanvas = sceneEl.renderer.domElement;
       sCtx.drawImage(webglCanvas, 0, 0, snapCanvas.width, snapCanvas.height);
 
-      // 3. 疊加拍立得相框與水印
       sCtx.lineWidth = 14;
       sCtx.strokeStyle = '#ffffff';
       sCtx.strokeRect(0, 0, snapCanvas.width, snapCanvas.height);
@@ -1685,8 +1499,8 @@
       const img = document.getElementById('snapshot-img');
       img.src = dataUrl;
       document.getElementById('snapshot-caption').innerText = (activeTarget === 'Aa')
-        ? "🐊 My 3D Volumetric Alligator"
-        : "🐻 My 3D Volumetric Bear";
+        ? "🐊 My 3D Alligator"
+        : "🐻 My 3D Bear";
 
       document.getElementById('snapshot-modal').style.display = 'flex';
       showToast("📸 拍照完成！可保存相片");
