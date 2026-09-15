@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Quiver AR 字母著色 - 純白陶瓷高光版</title>
+  <title>Quiver AR 字母著色 - 完美填滿旗艦版</title>
   
   <!-- A-Frame & MindAR (開源 WebAR 核心) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -308,7 +308,7 @@
 
   <!-- 觸控手勢提示 -->
   <div id="touch-hint">
-    <span>✨</span><span>晶瑩純白立體雕塑 • 單指滑動旋轉 360° • 雙指縮放</span>
+    <span>✨</span><span>1:1完美填滿彩繪 • 360°自由旋轉 • 雙指縮放</span>
   </div>
 
   <!-- 3D 拼字遊戲浮動層 -->
@@ -365,23 +365,20 @@
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
 
-    <!-- 關鍵革新：相機隨動雙重高亮度純白光照系統 (Headlight System) -->
-    <!-- 光源直接綁定在手機相機鏡頭上，無論手機如何旋轉、室內光線如何，正面永遠投射 100% 潔白明亮光輝，徹底消除灰色！ -->
+    <!-- 鏡頭隨動雙重高亮度純白光照系統 (Headlight System) -->
     <a-camera position="0 0 0" look-controls="enabled: false">
-      <!-- 1. 純白高照度定向光 (Direct Headlight) -->
       <a-entity light="type: directional; color: #ffffff; intensity: 1.25; position: 0 1 2;"></a-entity>
-      <!-- 2. 全域純白環境光 (Ambient Light)：消除暗角陰影，保證未塗色時為純純的白玉陶瓷雪白 -->
       <a-entity light="type: ambient; color: #ffffff; intensity: 1.05;"></a-entity>
     </a-camera>
 
     <!-- ================= 標靶 0：Aa Alligator ================= -->
     <a-entity id="targetAa" mindar-image-target="targetIndex: 0">
-      <!-- 3D 發音字母 Aa (預設隱藏，點擊發音或示範時優雅彈出) -->
+      <!-- 3D 發音字母 Aa (預設隱藏) -->
       <a-entity id="letterMeshAa" position="-0.22 0.38 0.12" visible="false"></a-entity>
 
-      <!-- 3D 鱷魚純淨立體雕塑 (無任何遮擋平面，未塗色純白，塗色後鮮明奪目) -->
-      <a-entity id="alligatorRotator" position="0 -0.12 0.04">
-        <a-entity id="alligatorGroup" rotation="24 0 0"></a-entity>
+      <!-- 3D 鱷魚真形雕塑 (精準 1:1 貼合學習單線條) -->
+      <a-entity id="alligatorRotator" position="0.02 -0.16 0.04">
+        <a-entity id="alligatorGroup" rotation="20 0 0"></a-entity>
       </a-entity>
     </a-entity>
 
@@ -390,18 +387,18 @@
       <!-- 3D 發音字母 Bb -->
       <a-entity id="letterMeshBb" position="-0.22 0.38 0.12" visible="false"></a-entity>
 
-      <!-- 3D 棕熊純淨立體雕塑 -->
-      <a-entity id="bearRotator" position="0 -0.10 0.04">
-        <a-entity id="bearGroup" rotation="22 0 0"></a-entity>
+      <!-- 3D 棕熊真形雕塑 -->
+      <a-entity id="bearRotator" position="0 -0.14 0.04">
+        <a-entity id="bearGroup" rotation="20 0 0"></a-entity>
       </a-entity>
     </a-entity>
 
   </a-scene>
 
-  <!-- 旗艦版完整引擎：純白雪瓷、完美色彩映射、音效、拼字與拍照系統 -->
+  <!-- 旗艦版完整引擎：像素級真形輪廓與絕對 UV 映射 -->
   <script>
     /* =========================================================
-       1. 全域狀態與自製低延遲 Web Audio 音效合成器
+       1. 全域狀態與低延遲 Web Audio 音效合成器
        ========================================================= */
     let activeTarget = 'Aa';
     let isTargetTracked = false;
@@ -523,35 +520,43 @@
     const clickableObjects = [];
 
     /* =========================================================
-       3. 精準 UV 映射演算法
+       3. 核心突破：1:1 絕對逆變換 UV 映射 (分毫不差完整覆蓋)
        ========================================================= */
     const sceneEl = document.querySelector('a-scene');
 
     sceneEl.addEventListener('loaded', () => {
-      buildVolumetricAlligator();
-      buildVolumetricBear();
+      buildAccurateAlligator();
+      buildAccurateBear();
       buildCandyLetters();
       setupTouchRaycaster();
     });
 
-    function applyModelUV(geom, uMin, vMin, uMax, vMax) {
-      geom.computeBoundingBox();
-      const bb = geom.boundingBox;
+    // 鱷魚 UV：原圖寬 770, 高 1024。鱷魚中心 (X:400, Y:646)，縮放基準寬 639 px
+    function applyGatorUV(geom) {
       const uv = geom.attributes.uv;
       const pos = geom.attributes.position;
-      const width = bb.max.x - bb.min.x;
-      const height = bb.max.y - bb.min.y;
-
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const y = pos.getY(i);
+        // 精準映射回紙張原圖座標：
+        const u = Math.max(0, Math.min(1, (400.0 + x * 639.0) / 770.0));
+        const v = Math.max(0, Math.min(1, (378.0 + y * 639.0) / 1024.0));
+        uv.setXY(i, u, v);
+      }
+      uv.needsUpdate = true;
+      geom.computeVertexNormals();
+      geom.normalsNeedUpdate = true;
+    }
 
-        const nx = Math.max(0, Math.min(1, (x - bb.min.x) / width));
-        const ny = Math.max(0, Math.min(1, (y - bb.min.y) / height));
-
-        const u = uMin + nx * (uMax - uMin);
-        const v = (1.0 - vMax) + ny * (vMax - vMin);
-
+    // 棕熊 UV：原圖寬 770, 高 1024。棕熊中心 (X:380, Y:653.5)，縮放基準寬 490 px
+    function applyBearUV(geom) {
+      const uv = geom.attributes.uv;
+      const pos = geom.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const u = Math.max(0, Math.min(1, (380.0 + x * 490.0) / 770.0));
+        const v = Math.max(0, Math.min(1, (370.5 + y * 490.0) / 1024.0));
         uv.setXY(i, u, v);
       }
       uv.needsUpdate = true;
@@ -560,87 +565,85 @@
     }
 
     /* =========================================================
-       4. 建立 100% 純白無瑕/高飽和模型 (雪白陶瓷質感)
+       4. 建立像素級精確擬合 3D 模型 (真形 1:1 密合，收斂倒角無灰框)
        ========================================================= */
-    function buildVolumetricAlligator() {
+    function buildAccurateAlligator() {
       const group = document.querySelector('#alligatorGroup').object3D;
 
-      // 核心修正：metalness=0 消除金屬黑吸光，color=0xffffff 確保未塗色為 100% 雪白！
       const mat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         map: dynamicTexture,
-        roughness: 0.22,
+        roughness: 0.25,
         metalness: 0.0
       });
 
+      // 從原圖 target_alligator_aa.jpg 像素精確萃取之 31 個頂點輪廓
       const gatorShape = new THREE.Shape();
-      gatorShape.moveTo(-0.48, 0.02);
-      gatorShape.quadraticCurveTo(-0.42, 0.06, -0.32, 0.08);
-      gatorShape.quadraticCurveTo(-0.25, 0.12, -0.22, 0.13);
-      gatorShape.quadraticCurveTo(-0.18, 0.11, -0.12, 0.11);
-      
-      // 鋸齒背部突起
-      gatorShape.lineTo(-0.06, 0.13);
-      gatorShape.lineTo(-0.02, 0.11);
-      gatorShape.lineTo( 0.04, 0.13);
-      gatorShape.lineTo( 0.08, 0.11);
-      gatorShape.lineTo( 0.14, 0.12);
-      gatorShape.lineTo( 0.18, 0.10);
-      gatorShape.lineTo( 0.24, 0.11);
+      gatorShape.moveTo(-0.499, -0.003);
+      gatorShape.lineTo(-0.43,   0.033);
+      gatorShape.lineTo(-0.36,   0.049);
+      gatorShape.lineTo(-0.29,   0.100);
+      gatorShape.lineTo(-0.235,  0.116);
+      gatorShape.lineTo(-0.141,  0.138);
+      gatorShape.lineTo(-0.047,  0.163);
+      gatorShape.lineTo( 0.047,  0.185);
+      gatorShape.lineTo( 0.125,  0.194);
+      gatorShape.lineTo( 0.211,  0.175);
+      gatorShape.lineTo( 0.290,  0.142);
+      gatorShape.lineTo( 0.376,  0.095);
+      gatorShape.lineTo( 0.493,  0.041);
+      gatorShape.lineTo( 0.415,  0.013);
+      gatorShape.lineTo( 0.321, -0.006);
+      gatorShape.lineTo( 0.274, -0.045);
+      gatorShape.lineTo( 0.290, -0.124);
+      gatorShape.lineTo( 0.235, -0.155);
+      gatorShape.lineTo( 0.180, -0.139);
+      gatorShape.lineTo( 0.196, -0.030);
+      gatorShape.lineTo( 0.078, -0.041);
+      gatorShape.lineTo(-0.031, -0.047);
+      gatorShape.lineTo(-0.125, -0.041);
+      gatorShape.lineTo(-0.102, -0.108);
+      gatorShape.lineTo(-0.110, -0.171);
+      gatorShape.lineTo(-0.172, -0.191);
+      gatorShape.lineTo(-0.227, -0.163);
+      gatorShape.lineTo(-0.207, -0.034);
+      gatorShape.lineTo(-0.297, -0.028);
+      gatorShape.lineTo(-0.391, -0.022);
+      gatorShape.lineTo(-0.462, -0.014);
+      gatorShape.closePath();
 
-      // 強壯尾巴
-      gatorShape.quadraticCurveTo(0.38, 0.08, 0.48, 0.04);
-      gatorShape.lineTo(0.55, 0.01);
-      gatorShape.quadraticCurveTo(0.44, -0.04, 0.30, -0.06);
-
-      // 後腳與爪部
-      gatorShape.lineTo(0.24, -0.16);
-      gatorShape.quadraticCurveTo(0.18, -0.18, 0.15, -0.16);
-      gatorShape.lineTo(0.18, -0.06);
-
-      // 腹部
-      gatorShape.quadraticCurveTo(0.05, -0.06, -0.05, -0.06);
-
-      // 前腳與爪部
-      gatorShape.lineTo(-0.10, -0.16);
-      gatorShape.quadraticCurveTo(-0.16, -0.18, -0.19, -0.16);
-      gatorShape.lineTo(-0.15, -0.04);
-
-      // 顎部吻端
-      gatorShape.quadraticCurveTo(-0.30, -0.03, -0.44, -0.01);
-      gatorShape.lineTo(-0.48, 0.02);
-
+      // 核心控制：細緻微導角 (bevelSize: 0.008)，保證模型輪廓不溢出塗色區！
       const extrudeSettings = {
-        depth: 0.08,
+        depth: 0.075,
         bevelEnabled: true,
-        bevelSegments: 6,
-        steps: 2,
-        bevelSize: 0.025,
-        bevelThickness: 0.03
+        bevelSegments: 4,
+        steps: 1,
+        bevelSize: 0.008,
+        bevelThickness: 0.012
       };
 
       const gatorGeom = new THREE.ExtrudeGeometry(gatorShape, extrudeSettings);
-      applyModelUV(gatorGeom, 0.081, 0.480, 0.918, 0.777);
+      applyGatorUV(gatorGeom);
 
       const gatorMesh = new THREE.Mesh(gatorGeom, mat);
-      gatorMesh.name = "volumetric_alligator";
+      gatorMesh.name = "accurate_alligator";
       gatorMesh.position.set(0, 0, 0);
       group.add(gatorMesh);
       clickableObjects.push(gatorMesh);
 
-      // 3D 晶亮金黃眼珠與垂直瞳孔
+      // 3D 晶亮金黃眼珠與瞳孔 (對齊原圖眼睛 X:215, Y:582 -> 3D: -0.29, 0.10)
       const eyeMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.1, metalness: 0.0 });
       const pupilMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.024, 16, 16), eyeMat);
-      eye.position.set(-0.23, 0.11, 0.095);
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 10, 10), pupilMat);
-      pupil.position.set(-0.235, 0.11, 0.115);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 16), eyeMat);
+      eye.position.set(-0.29, 0.095, 0.09);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.010, 10, 10), pupilMat);
+      pupil.position.set(-0.295, 0.095, 0.108);
       pupil.scale.set(0.4, 1.2, 0.4);
       group.add(eye);
       group.add(pupil);
     }
 
-    function buildVolumetricBear() {
+    function buildAccurateBear() {
       const group = document.querySelector('#bearGroup').object3D;
 
       const mat = new THREE.MeshStandardMaterial({
@@ -650,83 +653,68 @@
         metalness: 0.0
       });
 
+      // 從原圖 target_bear_bb.jpg 像素精確萃取之 30 個頂點輪廓
       const bearShape = new THREE.Shape();
-      bearShape.moveTo(-0.30, -0.10);
-      bearShape.quadraticCurveTo(-0.35, -0.02, -0.32, 0.04);
-      bearShape.quadraticCurveTo(-0.24, 0.08, -0.19, 0.14);
-      
-      // 耳朵
-      bearShape.quadraticCurveTo(-0.21, 0.23, -0.15, 0.25);
-      bearShape.quadraticCurveTo(-0.11, 0.24, -0.12, 0.18);
-
-      // 頸背肌肉駝峰
-      bearShape.quadraticCurveTo(-0.06, 0.23, 0.02, 0.24);
-      bearShape.quadraticCurveTo(0.18, 0.22, 0.32, 0.14);
-      
-      // 尾巴
-      bearShape.lineTo(0.38, 0.08);
-      bearShape.lineTo(0.40, 0.05);
-      bearShape.quadraticCurveTo(0.36, -0.02, 0.32, -0.06);
-
-      // 後腿
-      bearShape.lineTo(0.28, -0.22);
-      bearShape.quadraticCurveTo(0.22, -0.25, 0.18, -0.23);
-      bearShape.lineTo(0.19, -0.08);
-
-      // 腹部
-      bearShape.quadraticCurveTo(0.06, -0.08, -0.02, -0.06);
-
-      // 前腿
-      bearShape.lineTo(-0.07, -0.22);
-      bearShape.quadraticCurveTo(-0.13, -0.25, -0.17, -0.23);
-      bearShape.lineTo(-0.12, -0.03);
-
-      // 喉部
-      bearShape.quadraticCurveTo(-0.22, -0.12, -0.30, -0.10);
+      bearShape.moveTo(-0.480, -0.156);
+      bearShape.lineTo(-0.494, -0.095);
+      bearShape.lineTo(-0.480,  0.007);
+      bearShape.lineTo(-0.500,  0.170);
+      bearShape.lineTo(-0.459,  0.221);
+      bearShape.lineTo(-0.418,  0.191);
+      bearShape.lineTo(-0.306,  0.262);
+      bearShape.lineTo(-0.143,  0.405);
+      bearShape.lineTo( 0.061,  0.432);
+      bearShape.lineTo( 0.286,  0.385);
+      bearShape.lineTo( 0.429,  0.303);
+      bearShape.lineTo( 0.500,  0.221);
+      bearShape.lineTo( 0.449,  0.160);
+      bearShape.lineTo( 0.418,  0.048);
+      bearShape.lineTo( 0.398, -0.136);
+      bearShape.lineTo( 0.388, -0.309);
+      bearShape.lineTo( 0.316, -0.340);
+      bearShape.lineTo( 0.255, -0.319);
+      bearShape.lineTo( 0.306, -0.115);
+      bearShape.lineTo( 0.143, -0.146);
+      bearShape.lineTo(-0.020, -0.136);
+      bearShape.lineTo(-0.082, -0.217);
+      bearShape.lineTo(-0.122, -0.350);
+      bearShape.lineTo(-0.163, -0.432);
+      bearShape.lineTo(-0.245, -0.421);
+      bearShape.lineTo(-0.194, -0.238);
+      bearShape.lineTo(-0.184, -0.054);
+      bearShape.lineTo(-0.286, -0.095);
+      bearShape.lineTo(-0.378, -0.177);
+      bearShape.lineTo(-0.449, -0.187);
+      bearShape.closePath();
 
       const extrudeSettings = {
-        depth: 0.09,
+        depth: 0.08,
         bevelEnabled: true,
-        bevelSegments: 6,
-        steps: 2,
-        bevelSize: 0.028,
-        bevelThickness: 0.035
+        bevelSegments: 4,
+        steps: 1,
+        bevelSize: 0.008,
+        bevelThickness: 0.012
       };
 
       const bearGeom = new THREE.ExtrudeGeometry(bearShape, extrudeSettings);
-      applyModelUV(bearGeom, 0.081, 0.420, 0.918, 0.879);
+      applyBearUV(bearGeom);
 
       const bearMesh = new THREE.Mesh(bearGeom, mat);
-      bearMesh.name = "volumetric_bear";
+      bearMesh.name = "accurate_bear";
       bearMesh.position.set(0, 0, 0);
       group.add(bearMesh);
       clickableObjects.push(bearMesh);
 
-      // 棕熊 3D 黑色鼻頭
+      // 棕熊立體黑鼻頭 (對齊鼻尖 X:145, Y:730 -> 3D: -0.48, -0.15)
       const noseMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.15, metalness: 0.0 });
-      const nose = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 12), noseMat);
-      nose.position.set(-0.31, 0.02, 0.10);
+      const nose = new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 12), noseMat);
+      nose.position.set(-0.47, -0.14, 0.09);
       group.add(nose);
-
-      // 棕熊黑眼珠
-      const eyeMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.08, metalness: 0.0 });
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 12, 12), eyeMat);
-      eye.position.set(-0.23, 0.09, 0.11);
-      group.add(eye);
     }
 
-    // 字母標籤
     function buildCandyLetters() {
-      const letterMatA = new THREE.MeshStandardMaterial({
-        color: 0xfbbf24,
-        roughness: 0.2,
-        metalness: 0.0
-      });
-      const letterMatB = new THREE.MeshStandardMaterial({
-        color: 0x60a5fa,
-        roughness: 0.2,
-        metalness: 0.0
-      });
+      const letterMatA = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.2, metalness: 0.0 });
+      const letterMatB = new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: 0.2, metalness: 0.0 });
 
       const extrudeSettings = {
         depth: 0.045,
@@ -830,7 +818,7 @@
     }
 
     /* =========================================================
-       5. 電腦視覺：自動白平衡、純白淨化與色彩飽和度優化
+       5. 電腦視覺：自動白平衡與純白淨化
        ========================================================= */
     function getVideoElement() {
       if (!videoEl) videoEl = document.querySelector('video');
@@ -924,7 +912,6 @@
           data[i + 1] = 255;
           data[i + 2] = 255;
         } else {
-          // 有著色 ➔ 感知飽和增強
           const maxC = Math.max(rn, gn, bn);
           const minC = Math.min(rn, gn, bn);
           const l = (maxC + minC) / 2;
@@ -1025,14 +1012,14 @@
         if (activeTarget === 'Aa') {
           const gator = document.querySelector('#alligatorGroup')?.object3D;
           if (gator) {
-            gator.rotation.z = Math.sin(globalClock * 1.6) * 0.03;
-            gator.position.y = Math.sin(globalClock * 2.2) * 0.005;
+            gator.rotation.z = Math.sin(globalClock * 1.6) * 0.025;
+            gator.position.y = Math.sin(globalClock * 2.2) * 0.004;
           }
         } else {
           const bear = document.querySelector('#bearGroup')?.object3D;
           if (bear) {
-            bear.rotation.y = Math.sin(globalClock * 1.2) * 0.035;
-            bear.position.y = Math.sin(globalClock * 1.8) * 0.005;
+            bear.rotation.y = Math.sin(globalClock * 1.2) * 0.03;
+            bear.position.y = Math.sin(globalClock * 1.8) * 0.004;
           }
         }
 
@@ -1055,11 +1042,11 @@
     targetAaEl.addEventListener('targetFound', () => {
       activeTarget = 'Aa';
       isTargetTracked = true;
-      hudText.innerText = "✨ 發現學習單 Aa！鱷魚純白雕塑呈獻";
+      hudText.innerText = "✨ 發現學習單 Aa！鱷魚 3D 立體浮現";
       btnText.innerText = "自然發音 /æ/";
       document.querySelector('#action-icon').innerText = "🐊";
       document.querySelector('#action-label').innerText = "大口咬合";
-      showToast("🐊 鱷魚 3D 浮現！未塗色處潔白如雪");
+      showToast("🐊 鱷魚 3D 浮現！1:1 完美密合填滿");
       playSFX('splash');
       if (isLiveSync) extractPaperColoring();
     });
@@ -1074,11 +1061,11 @@
     targetBbEl.addEventListener('targetFound', () => {
       activeTarget = 'Bb';
       isTargetTracked = true;
-      hudText.innerText = "✨ 發現學習單 Bb！棕熊純白雕塑呈獻";
+      hudText.innerText = "✨ 發現學習單 Bb！棕熊 3D 立體浮現";
       btnText.innerText = "自然發音 /b/";
       document.querySelector('#action-icon').innerText = "🐻";
       document.querySelector('#action-label').innerText = "雄壯咆哮";
-      showToast("🐻 棕熊 3D 浮現！未塗色處潔白如雪");
+      showToast("🐻 棕熊 3D 浮現！1:1 完美密合填滿");
       playSFX('roar');
       if (isLiveSync) extractPaperColoring();
     });
@@ -1232,7 +1219,6 @@
 
     function playPhonicsAudio() {
       initAudioContext();
-      // 顯示並跳躍 3D 字母
       const letterEl = (activeTarget === 'Aa')
         ? document.querySelector('#letterMeshAa')
         : document.querySelector('#letterMeshBb');
@@ -1277,11 +1263,11 @@
         let t = 0;
         const roar = setInterval(() => {
           t += 0.25;
-          bear.rotation.x = 0.45 + Math.sin(t) * 0.25;
+          bear.rotation.x = 0.40 + Math.sin(t) * 0.20;
           bear.scale.set(1.0 + Math.sin(t) * 0.12, 1.0 + Math.sin(t) * 0.12, 1.0);
           if (t >= Math.PI) {
             clearInterval(roar);
-            bear.rotation.x = 0.45;
+            bear.rotation.x = 0.40;
             bear.scale.set(1, 1, 1);
           }
         }, 20);
