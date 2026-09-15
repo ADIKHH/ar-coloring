@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR 字母著色學習卡 - Aa & Bb</title>
+  
+  <!-- A-Frame & MindAR (開源免費 WebAR) -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+    
+    /* 頂部引導提示框 */
+    #hud-top {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.6; }
+    }
+
+    /* 底部操作面板 */
+    #hud-bottom {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      gap: 12px;
+    }
+    .action-btn {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(59, 130, 246, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease;
+    }
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+    .btn-green {
+      background: linear-gradient(135deg, #10b981, #059669);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部即時提示 -->
+  <div id="hud-top">
+    <div class="status-dot"></div>
+    <span id="instruction-text">請將鏡頭對準學習單上的「Aa」或「Bb」</span>
+  </div>
+
+  <!-- 底部互動按鈕 -->
+  <div id="hud-bottom">
+    <button class="action-btn btn-green" onclick="playPhonicsAudio()">
+      <span>🗣️</span><span id="btn-text">聽自然發音</span>
+    </button>
+  </div>
+
+  <!-- WebAR 3D 場景 -->
+  <a-scene 
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; filterMinCF: 0.0005; filterBeta: 0.01;" 
+    color-space="sRGB" 
+    renderer="colorManagement: true, physicallyCorrectLights: true" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <!-- 若有下載到 3D GLB 模型可放在這裡啟用 -->
+      <!-- <a-asset-item id="alligatorModel" src="./alligator.glb"></a-asset-item> -->
+      <!-- <a-asset-item id="bearModel" src="./bear.glb"></a-asset-item> -->
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- ================= 標靶 0：Aa Alligator ================= -->
+    <a-entity id="targetAa" mindar-image-target="targetIndex: 0">
+      <!-- 3D 浮空字母 Aa -->
+      <a-text value="Aa" color="#f43f5e" align="center" position="-0.25 0.5 0.2" scale="2.2 2.2 2.2" font="kelsonsans"
+              animation="property: position; to: -0.25 0.55 0.2; dir: alternate; dur: 1200; loop: true; easing: easeInOutSine"></a-text>
+
+      <!-- 3D 鱷魚展示（內建低多邊形組合，免外掛模型立即顯示！） -->
+      <a-entity id="alligatorMesh" position="0 -0.15 0.15" rotation="20 0 0">
+        <!-- 鱷魚軀幹 -->
+        <a-box color="#10b981" depth="0.5" height="0.12" width="0.22" position="0 0 0" shadow></a-box>
+        <!-- 鱷魚嘴部 -->
+        <a-box color="#059669" depth="0.3" height="0.08" width="0.18" position="0 0 0.35" shadow></a-box>
+        <!-- 眼睛 -->
+        <a-sphere color="#facc15" radius="0.035" position="0.07 0.07 0.2"></a-sphere>
+        <a-sphere color="#000000" radius="0.015" position="0.07 0.07 0.23"></a-sphere>
+        <a-sphere color="#facc15" radius="0.035" position="-0.07 0.07 0.2"></a-sphere>
+        <a-sphere color="#000000" radius="0.015" position="-0.07 0.07 0.23"></a-sphere>
+        <!-- 鱷魚尾巴 -->
+        <a-cone color="#10b981" radius-bottom="0.11" radius-top="0.01" height="0.4" position="0 0 -0.42" rotation="90 0 0"
+                animation="property: rotation; to: 90 15 0; dir: alternate; dur: 800; loop: true"></a-cone>
+        <!-- 沼澤半透明水波 -->
+        <a-plane color="#38bdf8" opacity="0.45" width="0.9" height="0.9" position="0 -0.06 0" rotation="-90 0 0"></a-plane>
+      </a-entity>
+
+      <!-- 若有 GLB 模型，可解除註解直接使用下方標籤 -->
+      <!-- <a-gltf-model src="#alligatorModel" position="0 -0.1 0.1" scale="0.3 0.3 0.3" rotation="90 0 0"></a-gltf-model> -->
+    </a-entity>
+
+    <!-- ================= 標靶 1：Bb Bear ================= -->
+    <a-entity id="targetBb" mindar-image-target="targetIndex: 1">
+      <!-- 3D 浮空字母 Bb -->
+      <a-text value="Bb" color="#a855f7" align="center" position="-0.25 0.5 0.2" scale="2.2 2.2 2.2" font="kelsonsans"
+              animation="property: position; to: -0.25 0.55 0.2; dir: alternate; dur: 1200; loop: true; easing: easeInOutSine"></a-text>
+
+      <!-- 3D 棕熊展示（內建低多邊形組合） -->
+      <a-entity id="bearMesh" position="0 -0.1 0.15" rotation="15 0 0">
+        <!-- 熊軀幹 -->
+        <a-sphere color="#78350f" radius="0.22" position="0 0 0" scale="1 1.2 1.3"></a-sphere>
+        <!-- 熊頭部 -->
+        <a-sphere color="#92400e" radius="0.16" position="0 0.2 0.2"></a-sphere>
+        <!-- 圓耳朵 -->
+        <a-sphere color="#78350f" radius="0.06" position="0.12 0.32 0.18"></a-sphere>
+        <a-sphere color="#78350f" radius="0.06" position="-0.12 0.32 0.18"></a-sphere>
+        <!-- 熊鼻子 -->
+        <a-sphere color="#d97706" radius="0.06" position="0 0.18 0.33"></a-sphere>
+        <a-sphere color="#1e293b" radius="0.02" position="0 0.2 0.38"></a-sphere>
+      </a-entity>
+
+      <!-- 若有 GLB 模型，可解除註解直接使用下方標籤 -->
+      <!-- <a-gltf-model src="#bearModel" position="0 -0.1 0.1" scale="0.3 0.3 0.3" rotation="90 0 0"></a-gltf-model> -->
+    </a-entity>
+
+  </a-scene>
+
+  <script>
+    let activeTarget = 'Aa';
+
+    const targetAa = document.querySelector('#targetAa');
+    const targetBb = document.querySelector('#targetBb');
+    const hudText = document.querySelector('#instruction-text');
+    const btnText = document.querySelector('#btn-text');
+
+    // 辨識鎖定事件
+    targetAa.addEventListener("targetFound", () => {
+      activeTarget = 'Aa';
+      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (鱷魚)</b>";
+      btnText.innerText = "聽自然發音 Aa";
+      speakPhonics("A is for Alligator! /æ/ /æ/ Alligator!");
+    });
+
+    targetAa.addEventListener("targetLost", () => {
+      hudText.innerText = "請將鏡頭對準學習單上的「Aa」或「Bb」";
+    });
+
+    targetBb.addEventListener("targetFound", () => {
+      activeTarget = 'Bb';
+      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (棕熊)</b>";
+      btnText.innerText = "聽自然發音 Bb";
+      speakPhonics("B is for Bear! /b/ /b/ Bear!");
+    });
+
+    targetBb.addEventListener("targetLost", () => {
+      hudText.innerText = "請將鏡頭對準學習單上的「Aa」或「Bb」";
+    });
+
+    // 瀏覽器內建英語自然發音朗讀
+    function speakPhonics(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'en-US';
+        msg.rate = 0.88;
+        msg.pitch = 1.05;
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    function playPhonicsAudio() {
+      if (activeTarget === 'Aa') {
+        speakPhonics("A says /æ/, /æ/, /æ/... Alligator!");
+      } else {
+        speakPhonics("B says /b/, /b/, /b/... Bear!");
+      }
+    }
+  </script>
+</body>
+</html>
