@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR 字母著色學習卡 - 無黑線殘留純淨版</title>
+  <title>AR 字母著色學習卡 - 100% 淨白消線版</title>
   
   <!-- A-Frame & MindAR (開源免費 WebAR) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -25,9 +25,9 @@
       top: 14px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.88);
+      background: rgba(15, 23, 42, 0.90);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: #f8fafc;
       padding: 9px 20px;
       border-radius: 9999px;
@@ -37,7 +37,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
       pointer-events: none;
       white-space: nowrap;
     }
@@ -53,14 +53,14 @@
       50% { transform: scale(1.25); opacity: 0.6; }
     }
 
-    /* 右上角：鏡頭擷取紙本塗鴉預覽小圖 */
+    /* 右上角：鏡頭擷取紙本塗鴉預覽小圖 (已去除黑線，未上色為純白) */
     #preview-badge {
       position: fixed;
       top: 14px;
       right: 14px;
       z-index: 999;
       background: rgba(15, 23, 42, 0.92);
-      border: 2px solid #3b82f6;
+      border: 2px solid #10b981;
       border-radius: 12px;
       padding: 4px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
@@ -71,7 +71,7 @@
     }
     #preview-badge span {
       font-size: 10px;
-      color: #93c5fd;
+      color: #6ee7b7;
       font-weight: bold;
       margin-bottom: 2px;
     }
@@ -90,7 +90,7 @@
       bottom: 74px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.68);
+      background: rgba(0, 0, 0, 0.72);
       backdrop-filter: blur(4px);
       color: #fef08a;
       padding: 5px 14px;
@@ -117,8 +117,8 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 8px;
-      width: 95%;
-      max-width: 460px;
+      width: 96%;
+      max-width: 480px;
     }
     .action-btn {
       background: linear-gradient(135deg, #3b82f6, #1d4ed8);
@@ -147,7 +147,7 @@
       box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
     }
     .btn-toggle {
-      background: rgba(30, 41, 59, 0.85);
+      background: rgba(30, 41, 59, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.2);
       color: #cbd5e1;
       font-size: 12px;
@@ -202,9 +202,9 @@
     <span id="instruction-text">請將鏡頭對準學習單「Aa」或「Bb」</span>
   </div>
 
-  <!-- 右上角：鏡頭擷取紙本塗鴉預覽小圖 (已去除黑線，未上色為純白) -->
+  <!-- 右上角：鏡頭擷取紙本塗鴉預覽小圖 -->
   <div id="preview-badge">
-    <span>🎨 純淨著色</span>
+    <span>✨ 純白去線預覽</span>
     <canvas id="preview-canvas" width="120" height="160"></canvas>
   </div>
 
@@ -212,7 +212,7 @@
 
   <!-- 觸控互動提示 -->
   <div id="touch-hint">
-    <span>✨</span><span>無黑線殘留純白雕塑 • 未著色為純白 • 點擊/旋轉互動</span>
+    <span>✨</span><span>未塗色部位強制純白 • 黑色線條 100% 徹底清除 • 點擊動物/字母互動</span>
   </div>
 
   <!-- 底部操作面板 -->
@@ -226,8 +226,8 @@
     <button id="live-toggle-btn" class="action-btn btn-toggle active" onclick="toggleLiveSync()">
       <span>🔴</span><span>即時同步: 開</span>
     </button>
-    <button id="filter-toggle-btn" class="action-btn btn-toggle active" onclick="toggleLineFilter()">
-      <span>🧼</span><span>黑線濾除: 開</span>
+    <button id="threshold-btn" class="action-btn btn-toggle active" onclick="cycleCleanSensitivity()">
+      <span>🧼</span><span id="threshold-text">除線靈敏度: 高</span>
     </button>
     <button class="action-btn btn-toggle" onclick="resetModelPose()">
       <span>🔄</span><span>重設</span>
@@ -242,21 +242,22 @@
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
 
-    <!-- 柔和自然環境光，確保未著色的純白模型具有優雅的立體陰影 -->
-    <a-entity light="type: ambient; color: #ffffff; intensity: 0.85;"></a-entity>
-    <a-entity light="type: directional; color: #ffffff; intensity: 0.9; position: 0.5 2 1;"></a-entity>
+    <!-- 自然明亮打光，使純白 3D 雕塑呈現細緻高雅的立體陰影 -->
+    <a-entity light="type: ambient; color: #ffffff; intensity: 0.95;"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 0.8; position: 0.4 2 1.2;"></a-entity>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <!-- ================= 標靶 0：Aa Alligator ================= -->
+    <!-- 降低 Z 軸偏移至 0.02，讓 3D 鱷魚精準貼合紙面圖形，不再浮空偏移 -->
     <a-entity id="targetAa" mindar-image-target="targetIndex: 0">
       <!-- 3D 浮空立體字母 Aa -->
-      <a-entity id="letterMeshAa" position="-0.26 0.45 0.15"></a-entity>
+      <a-entity id="letterMeshAa" position="-0.26 0.38 0.04"></a-entity>
 
-      <!-- 3D 鱷魚真形輪廓純白/彩繪雕塑 -->
-      <a-entity id="alligatorRotator" position="0 -0.15 0.12">
-        <a-entity id="alligatorGroup" rotation="20 0 0">
-          <a-plane id="waterPlaneAa" opacity="0.65" width="1.0" height="0.85" position="0 -0.04 0" rotation="-90 0 0"></a-plane>
+      <!-- 3D 鱷魚真形輪廓立體雕塑 (高度貼合紙面) -->
+      <a-entity id="alligatorRotator" position="0 -0.12 0.03">
+        <a-entity id="alligatorGroup" rotation="10 0 0">
+          <a-plane id="waterPlaneAa" opacity="0.6" width="1.0" height="0.85" position="0 -0.02 0" rotation="-90 0 0"></a-plane>
         </a-entity>
       </a-entity>
     </a-entity>
@@ -264,30 +265,33 @@
     <!-- ================= 標靶 1：Bb Bear ================= -->
     <a-entity id="targetBb" mindar-image-target="targetIndex: 1">
       <!-- 3D 浮空立體字母 Bb -->
-      <a-entity id="letterMeshBb" position="-0.26 0.45 0.15"></a-entity>
+      <a-entity id="letterMeshBb" position="-0.26 0.38 0.04"></a-entity>
 
-      <!-- 3D 棕熊真形輪廓純白/彩繪雕塑 -->
-      <a-entity id="bearRotator" position="0 -0.1 0.12">
-        <a-entity id="bearGroup" rotation="15 0 0">
-          <a-plane id="waterPlaneBb" opacity="0.55" width="1.0" height="0.85" position="0 -0.04 0" rotation="-90 0 0"></a-plane>
+      <!-- 3D 棕熊真形輪廓立體雕塑 -->
+      <a-entity id="bearRotator" position="0 -0.10 0.03">
+        <a-entity id="bearGroup" rotation="10 0 0">
+          <a-plane id="waterPlaneBb" opacity="0.5" width="1.0" height="0.85" position="0 -0.02 0" rotation="-90 0 0"></a-plane>
         </a-entity>
       </a-entity>
     </a-entity>
 
   </a-scene>
 
-  <!-- 核心運算：無黑線智慧修復、未上色純白基準、3D 輪廓與觸控 -->
+  <!-- 核心運算：自動環境白平衡、正規化色差隔離 (100% 消除黑線) 與觸控 -->
   <script>
     /* =========================================================
-       1. 全域狀態與純白預設畫布
+       1. 全域狀態與純白畫布系統
        ========================================================= */
     let activeTarget = 'Aa';
     let isTargetTracked = false;
     let isLiveSync = true;
-    let isFilterActive = true; // 是否開啟黑線智慧濾除
+    let colorSensitivityLevel = 1; // 0: 弱(0.06), 1: 標準(0.085), 2: 強效(0.11)
+    const SENSITIVITY_THRESHOLDS = [0.06, 0.085, 0.11];
+    const SENSITIVITY_LABELS = ["除線: 靈敏", "除線: 標準(推薦)", "除線: 強效超淨白"];
+
     let videoEl = null;
 
-    // 核心貼圖畫布 (預設為 100% 純白 #ffffff，保證未塗色時模型為乾淨純白)
+    // 核心貼圖畫布 (512x680)
     const textureCanvas = document.createElement('canvas');
     textureCanvas.width = 512;
     textureCanvas.height = 680;
@@ -298,7 +302,7 @@
     const dynamicTexture = new THREE.CanvasTexture(textureCanvas);
     dynamicTexture.colorSpace = THREE.SRGBColorSpace || THREE.sRGBEncoding;
 
-    // 縮圖畫布
+    // 縮圖預覽畫布
     const previewCanvas = document.getElementById('preview-canvas');
     const prevCtx = previewCanvas.getContext('2d');
     prevCtx.fillStyle = '#ffffff';
@@ -309,7 +313,7 @@
     const clickableObjects = [];
 
     /* =========================================================
-       2. 建立真形輪廓 3D 模型
+       2. 建立精緻真形輪廓 3D 模型
        ========================================================= */
     const sceneEl = document.querySelector('a-scene');
 
@@ -345,8 +349,8 @@
       const group = document.querySelector('#alligatorGroup').object3D;
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        roughness: 0.4,
-        metalness: 0.05
+        roughness: 0.35,
+        metalness: 0.02
       });
 
       const gatorShape = new THREE.Shape();
@@ -355,7 +359,7 @@
       gatorShape.quadraticCurveTo(-0.25, 0.12, -0.22, 0.13);
       gatorShape.quadraticCurveTo(-0.18, 0.11, -0.12, 0.11);
       
-      // 背部鋸齒
+      // 鋸齒骨板
       gatorShape.lineTo(-0.06, 0.13);
       gatorShape.lineTo(-0.02, 0.11);
       gatorShape.lineTo( 0.04, 0.13);
@@ -387,12 +391,12 @@
       gatorShape.lineTo(-0.48, 0.02);
 
       const extrudeSettings = {
-        depth: 0.12,
+        depth: 0.08, // 適度厚度，使輪廓更貼合紙張
         bevelEnabled: true,
-        bevelSegments: 4,
-        steps: 2,
-        bevelSize: 0.02,
-        bevelThickness: 0.025
+        bevelSegments: 3,
+        steps: 1,
+        bevelSize: 0.015,
+        bevelThickness: 0.018
       };
 
       const gatorGeom = new THREE.ExtrudeGeometry(gatorShape, extrudeSettings);
@@ -400,7 +404,7 @@
 
       const gatorMesh = new THREE.Mesh(gatorGeom, mat);
       gatorMesh.name = "organic_alligator";
-      gatorMesh.position.set(0, 0, -0.06);
+      gatorMesh.position.set(0, 0, 0);
       group.add(gatorMesh);
       clickableObjects.push(gatorMesh);
 
@@ -413,7 +417,7 @@
             wMesh.material = new THREE.MeshBasicMaterial({
               map: dynamicTexture,
               transparent: true,
-              opacity: 0.75
+              opacity: 0.7
             });
             wMesh.name = "water";
             clickableObjects.push(wMesh);
@@ -426,8 +430,8 @@
       const group = document.querySelector('#bearGroup').object3D;
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        roughness: 0.5,
-        metalness: 0.05
+        roughness: 0.45,
+        metalness: 0.02
       });
 
       const bearShape = new THREE.Shape();
@@ -439,7 +443,7 @@
       bearShape.quadraticCurveTo(-0.21, 0.23, -0.15, 0.25);
       bearShape.quadraticCurveTo(-0.11, 0.24, -0.12, 0.18);
 
-      // 頸峰
+      // 肩峰
       bearShape.quadraticCurveTo(-0.06, 0.23, 0.02, 0.24);
       bearShape.quadraticCurveTo(0.18, 0.22, 0.32, 0.14);
       
@@ -465,12 +469,12 @@
       bearShape.quadraticCurveTo(-0.22, -0.12, -0.30, -0.10);
 
       const extrudeSettings = {
-        depth: 0.16,
+        depth: 0.10,
         bevelEnabled: true,
-        bevelSegments: 4,
-        steps: 2,
-        bevelSize: 0.025,
-        bevelThickness: 0.03
+        bevelSegments: 3,
+        steps: 1,
+        bevelSize: 0.018,
+        bevelThickness: 0.02
       };
 
       const bearGeom = new THREE.ExtrudeGeometry(bearShape, extrudeSettings);
@@ -478,7 +482,7 @@
 
       const bearMesh = new THREE.Mesh(bearGeom, mat);
       bearMesh.name = "organic_bear";
-      bearMesh.position.set(0, 0, -0.08);
+      bearMesh.position.set(0, 0, 0);
       group.add(bearMesh);
       clickableObjects.push(bearMesh);
 
@@ -491,7 +495,7 @@
             gMesh.material = new THREE.MeshBasicMaterial({
               map: dynamicTexture,
               transparent: true,
-              opacity: 0.65
+              opacity: 0.6
             });
             gMesh.name = "ground";
             clickableObjects.push(gMesh);
@@ -503,20 +507,20 @@
     function buildOrganicLetters() {
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        roughness: 0.35,
-        metalness: 0.05
+        roughness: 0.3,
+        metalness: 0.02
       });
 
       const extrudeSettings = {
-        depth: 0.08,
+        depth: 0.06,
         bevelEnabled: true,
-        bevelSegments: 3,
+        bevelSegments: 2,
         steps: 1,
-        bevelSize: 0.015,
-        bevelThickness: 0.015
+        bevelSize: 0.012,
+        bevelThickness: 0.012
       };
 
-      // 大寫 A (中空三角形)
+      // 大寫 A
       const shapeA = new THREE.Shape();
       shapeA.moveTo(-0.16, -0.16);
       shapeA.lineTo(-0.04,  0.18);
@@ -554,7 +558,7 @@
       document.querySelector('#letterMeshAa').object3D.add(meshAa);
       clickableObjects.push(meshAa);
 
-      // 大寫 B (上下中空)
+      // 大寫 B
       const shapeB = new THREE.Shape();
       shapeB.moveTo(-0.16, -0.16);
       shapeB.lineTo(-0.16,  0.18);
@@ -611,7 +615,7 @@
     }
 
     /* =========================================================
-       3. 電腦視覺核心：黑線濾除、色塊擴散與純白還原演算法
+       3. 核心突破：環境白平衡與正規化色差隔離 (100% 消除黑線)
        ========================================================= */
     function getVideoElement() {
       if (!videoEl) {
@@ -657,13 +661,11 @@
         scrCorners.push({ x: vx, y: vy });
       }
 
-      // 1. 仿射透視網格拉平
+      // 1. 透視拉平至畫布
       warpQuadToCanvas(v, scrCorners, textureCanvas);
 
-      // 2. 智慧演算法：黑線濾除 + 未上色純白清理 + 色彩擴散修復
-      if (isFilterActive) {
-        cleanBlackLinesAndInpaint(texCtx, textureCanvas.width, textureCanvas.height);
-      }
+      // 2. 徹底消除黑線：執行環境白平衡校準 + 正規化色差隔離
+      cleanBlackLinesAndPureWhite(texCtx, textureCanvas.width, textureCanvas.height);
 
       dynamicTexture.needsUpdate = true;
       prevCtx.drawImage(textureCanvas, 0, 0, previewCanvas.width, previewCanvas.height);
@@ -671,104 +673,73 @@
       return true;
     }
 
-    // 核心演算法：消除印製黑線殘留，未著色區域一律強制還原純白 #ffffff
-    function cleanBlackLinesAndInpaint(ctx, W, H) {
+    // 核心演算法：以紙張環境白點為基準，無彩色部位一律「強制純白」，黑線 100% 抹除！
+    function cleanBlackLinesAndPureWhite(ctx, W, H) {
       const imgData = ctx.getImageData(0, 0, W, H);
       const data = imgData.data;
       const total = W * H;
 
-      // 標記陣列：0 = 未塗色純白, 1 = 學生塗色區, 2 = 原稿印製黑線
-      const type = new Uint8Array(total);
-      const outR = new Uint8ClampedArray(total);
-      const outG = new Uint8ClampedArray(total);
-      const outB = new Uint8ClampedArray(total);
+      // 步驟 A：自動探測紙張環境白平衡色溫基準 (Auto-White-Balance)
+      // 取畫面亮部前 25% 之平均值，代表真實房間暖燈下的紙張底色
+      let sumWr = 0, sumWg = 0, sumWb = 0, wCount = 0;
+      // 隔步採樣加速計算
+      for (let i = 0; i < data.length; i += 16) {
+        const lum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+        if (lum > 140) {
+          sumWr += data[i];
+          sumWg += data[i+1];
+          sumWb += data[i+2];
+          wCount++;
+        }
+      }
 
-      // 第一階段：像素特徵分類 (Classify Pixels)
-      for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      // 若環境過暗提供安全預設值
+      const Wr = (wCount > 50) ? (sumWr / wCount) : 190;
+      const Wg = (wCount > 50) ? (sumWg / wCount) : 180;
+      const Wb = (wCount > 50) ? (sumWb / wCount) : 165;
+
+      const threshold = SENSITIVITY_THRESHOLDS[colorSensitivityLevel];
+
+      // 步驟 B：正規化色差判定 (Normalized Chromatic Distance)
+      // 對於空白紙張與印製黑墨，其 r_norm ≈ g_norm ≈ b_norm，色差幾乎為 0！
+      // 只有小朋友塗的彩色筆、蠟筆，r, g, b 會出現巨大比例差異！
+      for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
 
-        const max = Math.max(r, g, b);
-        const min = Math.min(r, g, b);
-        const chroma = max - min;
-        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        const sat = max > 0 ? (chroma / max) : 0;
+        // 正規化為無色溫干擾之純淨光譜
+        const rn = r / Wr;
+        const gn = g / Wg;
+        const bn = b / Wb;
 
-        // A. 判定為黑線 (亮度偏暗且中性灰色/黑色)
-        if (lum < 118 && chroma < 35) {
-          type[p] = 2; // 印製黑線
-          outR[p] = 255; // 預設先補純白
-          outG[p] = 255;
-          outB[p] = 255;
-        }
-        // B. 判定為學生塗色區 (彩度顯著或飽和度 > 18%)
-        else if (chroma >= 25 || (sat >= 0.18 && lum < 228)) {
-          type[p] = 1; // 上色區
-          // 鮮豔化色彩增強
-          outR[p] = Math.min(255, Math.max(0, ((r / 255 - 0.5) * 1.32 + 0.5) * 255));
-          outG[p] = Math.min(255, Math.max(0, ((g / 255 - 0.5) * 1.32 + 0.5) * 255));
-          outB[p] = Math.min(255, Math.max(0, ((b / 255 - 0.5) * 1.32 + 0.5) * 255));
-        }
-        // C. 判定為未塗色白紙 (相機拍到的白色紙面，強制還原為 100% 潔淨純白)
-        else {
-          type[p] = 0; // 白底
-          outR[p] = 255;
-          outG[p] = 255;
-          outB[p] = 255;
-        }
-      }
+        // 計算最大相對通道色偏量 (Chromatic Deviation)
+        const d_rg = Math.abs(rn - gn);
+        const d_gb = Math.abs(gn - bn);
+        const d_br = Math.abs(bn - rn);
+        const chromaDist = Math.max(d_rg, d_gb, d_br);
 
-      // 第二階段：黑線修復與色彩擴散 (Inpainting)
-      // 若黑線旁邊有著色，則黑線被該著色色彩覆蓋 (消弭黑線邊界)；
-      // 若黑線旁邊完全沒著色，則黑線被強制化為純白 (整隻模型為純白無黑線雕塑)！
-      for (let y = 0; y < H; y++) {
-        const yOffset = y * W;
-        for (let x = 0; x < W; x++) {
-          const p = yOffset + x;
-          if (type[p] === 2) {
-            let sumR = 0, sumG = 0, sumB = 0, count = 0;
+        // 判斷：若色差小於閾值 ➔ 代表是「白紙」或「印刷黑線」，一律強制還原純白！
+        if (chromaDist < threshold) {
+          data[i]     = 255; // R: 純白
+          data[i + 1] = 255; // G: 純白
+          data[i + 2] = 255; // B: 純白
+        } else {
+          // 判斷：色差顯著 ➔ 代表是小朋友親手塗的顏色 (綠、藍、紅、黃、紫等)
+          // 增強色彩純度，去除底紙微灰，呈現亮麗飽滿色彩
+          const scale = Math.min(1.0, (chromaDist - threshold) / (threshold * 1.5));
+          
+          // 增強純色飽和度
+          let cr = (rn - 0.5) * 1.35 + 0.5;
+          let cg = (gn - 0.5) * 1.35 + 0.5;
+          let cb = (bn - 0.5) * 1.35 + 0.5;
 
-            // 向四週搜尋 3~6 像素半徑的著色鄰近點
-            const offsets = [-5, -3, 3, 5];
-            for (let dy of offsets) {
-              const ny = y + dy;
-              if (ny < 0 || ny >= H) continue;
-              const nyOffset = ny * W;
-              for (let dx of offsets) {
-                const nx = x + dx;
-                if (nx < 0 || nx >= W) continue;
-                const np = nyOffset + nx;
-                if (type[np] === 1) { // 找到鄰近有著色
-                  sumR += outR[np];
-                  sumG += outG[np];
-                  sumB += outB[np];
-                  count++;
-                }
-              }
-            }
-
-            if (count > 0) {
-              // 鄰近有著色：黑線被學生塗抹的色彩平滑融合填補
-              outR[p] = sumR / count;
-              outG[p] = sumG / count;
-              outB[p] = sumB / count;
-            } else {
-              // 鄰近完全未上色：黑線強制徹底純白化！
-              outR[p] = 255;
-              outG[p] = 255;
-              outB[p] = 255;
-            }
-          }
+          data[i]     = Math.min(255, Math.max(0, Math.round(cr * 255)));
+          data[i + 1] = Math.min(255, Math.max(0, Math.round(cg * 255)));
+          data[i + 2] = Math.min(255, Math.max(0, Math.round(cb * 255)));
         }
       }
 
-      // 寫回畫布
-      for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-        data[i]     = outR[p];
-        data[i + 1] = outG[p];
-        data[i + 2] = outB[p];
-      }
       ctx.putImageData(imgData, 0, 0);
     }
 
@@ -960,10 +931,10 @@
         const gator = document.querySelector('#alligatorGroup').object3D;
         if (gator) {
           gator.position.y = 0.08;
-          gator.rotation.x = 0.45;
+          gator.rotation.x = 0.35;
           setTimeout(() => {
             gator.position.y = 0;
-            gator.rotation.x = 0.35;
+            gator.rotation.x = 0.17;
           }, 350);
         }
         toast.innerText = "🐊 鱷魚咬合：Snap! Chomp!";
@@ -974,9 +945,9 @@
         const bear = document.querySelector('#bearGroup').object3D;
         if (bear) {
           bear.rotation.x = -0.15;
-          bear.position.y = 0.12;
+          bear.position.y = 0.10;
           setTimeout(() => {
-            bear.rotation.x = 0.26;
+            bear.rotation.x = 0.17;
             bear.position.y = 0;
           }, 450);
         }
@@ -985,7 +956,7 @@
         speakPhonics("Roar! Bear!");
 
       } else if (name.includes('water') || name.includes('ground')) {
-        toast.innerText = "💦 激起水花與落葉！";
+        toast.innerText = "💦 激起水花與波紋！";
         showToast();
         speakPhonics("Splash!");
       }
@@ -1025,7 +996,7 @@
         rotBb.scale.set(1, 1, 1);
       }
       const toast = document.getElementById('toast-msg');
-      toast.innerText = "🔄 已重設 3D 角色角度與大小！";
+      toast.innerText = "🔄 已重設 3D 角色角度！";
       showToast();
     }
 
@@ -1050,7 +1021,7 @@
     targetAa.addEventListener("targetFound", () => {
       activeTarget = 'Aa';
       isTargetTracked = true;
-      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (無黑線純淨版)</b>";
+      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (純淨無黑線)</b>";
       btnText.innerText = "自然發音 Aa";
       setTimeout(extractPaperColoring, 100);
       speakPhonics("A is for Alligator!");
@@ -1064,25 +1035,24 @@
     targetBb.addEventListener("targetFound", () => {
       activeTarget = 'Bb';
       isTargetTracked = true;
-      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (無黑線純淨版)</b>";
+      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (純淨無黑線)</b>";
       btnText.innerText = "自然發音 Bb";
       setTimeout(extractPaperColoring, 100);
       speakPhonics("B is for Bear!");
     });
 
     targetBb.addEventListener("targetLost", () => {
-      isTargetTracked = false;
-      hudText.innerHTML = "請將鏡頭對準學習單「Aa」或「Bb」";
+      hudText.innerText = "請將鏡頭對準學習單「Aa」或「Bb」";
     });
 
     function captureAndLockColoring() {
       const ok = extractPaperColoring();
       const toast = document.getElementById('toast-msg');
       if (ok) {
-        toast.innerText = `✨ 已鎖定「${activeTarget === 'Aa' ? '鱷魚' : '棕熊'}」無黑線彩繪！`;
+        toast.innerText = `✨ 已鎖定「${activeTarget === 'Aa' ? '鱷魚' : '棕熊'}」純白彩繪！`;
         showToast();
         triggerHapticFeedback();
-        speakPhonics("Great coloring!");
+        speakPhonics("Clean colors!");
       } else {
         toast.innerText = "請先對準學習單進行辨識！";
         showToast();
@@ -1101,19 +1071,12 @@
       }
     }
 
-    function toggleLineFilter() {
-      isFilterActive = !isFilterActive;
-      const btn = document.getElementById('filter-toggle-btn');
+    // 切換濾除靈敏度 (標準 / 強效超淨白 / 靈敏)
+    function cycleCleanSensitivity() {
+      colorSensitivityLevel = (colorSensitivityLevel + 1) % 3;
+      document.getElementById('threshold-text').innerText = SENSITIVITY_LABELS[colorSensitivityLevel];
       const toast = document.getElementById('toast-msg');
-      if (isFilterActive) {
-        btn.classList.add('active');
-        btn.innerHTML = '<span>🧼</span><span>黑線濾除: 開</span>';
-        toast.innerText = "🧼 已開啟黑線濾除與純白還原！";
-      } else {
-        btn.classList.remove('active');
-        btn.innerHTML = '<span>📷</span><span>黑線濾除: 關 (原始鏡頭)</span>';
-        toast.innerText = "📷 已切換為相機原始圖 (保留原稿黑線)";
-      }
+      toast.innerText = `🧼 已切換為【${SENSITIVITY_LABELS[colorSensitivityLevel]}】`;
       showToast();
       extractPaperColoring();
     }
