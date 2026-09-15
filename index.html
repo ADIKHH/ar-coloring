@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>AR 字母著色學習卡 - 觸控互動與動態著色版</title>
+  <title>AR 字母著色學習卡 - 真實輪廓 3D 立體版</title>
   
   <!-- A-Frame & MindAR (開源免費 WebAR) -->
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -16,7 +16,7 @@
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       user-select: none;
-      touch-action: none; /* 允許精準觸控手勢 */
+      touch-action: none;
     }
     
     /* 頂部引導提示列 */
@@ -84,13 +84,13 @@
       object-fit: cover;
     }
 
-    /* 螢幕正下方觸控操作提示文字 */
+    /* 螢幕正下方觸控操作提示 */
     #touch-hint {
       position: fixed;
-      bottom: 80px;
+      bottom: 76px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.65);
       backdrop-filter: blur(4px);
       color: #fef08a;
       padding: 5px 14px;
@@ -103,6 +103,7 @@
       display: flex;
       align-items: center;
       gap: 5px;
+      white-space: nowrap;
     }
 
     /* 底部操作面板 */
@@ -177,11 +178,10 @@
       pointer-events: none;
     }
 
-    /* 點擊水花粒子效果 */
     .tap-sparkle {
       position: fixed;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       pointer-events: none;
       transform: translate(-50%, -50%) scale(0.5);
@@ -210,9 +210,9 @@
 
   <div id="toast-msg">✨ 提示訊息</div>
 
-  <!-- 觸控互動手勢提示 -->
+  <!-- 觸控互動提示 -->
   <div id="touch-hint">
-    <span>👆</span><span>點擊 3D 動物/字母互動 • 單指滑動旋轉 • 雙指縮放</span>
+    <span>👆</span><span>真實輪廓 3D 模型 • 點擊動物/字母互動 • 單指旋轉 • 雙指縮放</span>
   </div>
 
   <!-- 底部操作面板 -->
@@ -243,34 +243,34 @@
 
     <!-- ================= 標靶 0：Aa Alligator ================= -->
     <a-entity id="targetAa" mindar-image-target="targetIndex: 0">
-      <!-- 字母群組 (支援點擊彈跳) -->
-      <a-entity id="letterMeshAa" position="-0.25 0.5 0.2"></a-entity>
+      <!-- 3D 浮空立體真實字母 Aa -->
+      <a-entity id="letterMeshAa" position="-0.26 0.45 0.15"></a-entity>
 
-      <!-- 鱷魚旋轉互動容器 (支援滑動旋轉與點擊) -->
-      <a-entity id="alligatorRotator" position="0 -0.15 0.15">
+      <!-- 3D 鱷魚真形輪廓立體雕塑 -->
+      <a-entity id="alligatorRotator" position="0 -0.15 0.12">
         <a-entity id="alligatorGroup" rotation="20 0 0">
           <!-- 沼澤半透明水波 -->
-          <a-plane id="waterPlaneAa" opacity="0.7" width="1.0" height="0.9" position="0 -0.06 0" rotation="-90 0 0"></a-plane>
+          <a-plane id="waterPlaneAa" opacity="0.65" width="1.0" height="0.85" position="0 -0.04 0" rotation="-90 0 0"></a-plane>
         </a-entity>
       </a-entity>
     </a-entity>
 
     <!-- ================= 標靶 1：Bb Bear ================= -->
     <a-entity id="targetBb" mindar-image-target="targetIndex: 1">
-      <!-- 字母群組 (支援點擊彈跳) -->
-      <a-entity id="letterMeshBb" position="-0.25 0.5 0.2"></a-entity>
+      <!-- 3D 浮空立體真實字母 Bb -->
+      <a-entity id="letterMeshBb" position="-0.26 0.45 0.15"></a-entity>
 
-      <!-- 棕熊旋轉互動容器 -->
-      <a-entity id="bearRotator" position="0 -0.1 0.15">
+      <!-- 3D 棕熊真形輪廓立體雕塑 -->
+      <a-entity id="bearRotator" position="0 -0.1 0.12">
         <a-entity id="bearGroup" rotation="15 0 0">
-          <a-plane id="waterPlaneBb" opacity="0.6" width="1.0" height="0.9" position="0 -0.06 0" rotation="-90 0 0"></a-plane>
+          <a-plane id="waterPlaneBb" opacity="0.55" width="1.0" height="0.85" position="0 -0.04 0" rotation="-90 0 0"></a-plane>
         </a-entity>
       </a-entity>
     </a-entity>
 
   </a-scene>
 
-  <!-- 核心運算：動態著色擷取與觸控互動系統 -->
+  <!-- 核心運算：真實輪廓幾何生成、動態 UV 貼圖與觸控互動 -->
   <script>
     /* =========================================================
        1. 全域狀態與動態貼圖畫布
@@ -280,7 +280,7 @@
     let isLiveSync = true;
     let videoEl = null;
 
-    // 著色貼圖畫布
+    // 核心貼圖畫布
     const textureCanvas = document.createElement('canvas');
     textureCanvas.width = 512;
     textureCanvas.height = 680;
@@ -297,70 +297,121 @@
 
     const hudText = document.querySelector('#instruction-text');
     const btnText = document.querySelector('#btn-text');
-
-    // 觸控可點選的三維物件群 (Raycast targets)
     const clickableObjects = [];
 
     /* =========================================================
-       2. 建立 3D 模型與光影幾何體
+       2. 建立依據圖卡實際輪廓生成的 3D 模型 (ExtrudeGeometry)
        ========================================================= */
     const sceneEl = document.querySelector('a-scene');
 
     sceneEl.addEventListener('loaded', () => {
-      buildTexturedAlligator();
-      buildTexturedBear();
-      buildTexturedLetters();
+      buildOrganicAlligator();
+      buildOrganicBear();
+      buildOrganicLetters();
       setupTouchRaycaster();
     });
 
-    function buildTexturedAlligator() {
+    // UV 座標自動映射到紙張指定百分比區間
+    function remapContourUV(geom, uMin, vMin, uMax, vMax) {
+      geom.computeBoundingBox();
+      const bb = geom.boundingBox;
+      const uv = geom.attributes.uv;
+      const pos = geom.attributes.position;
+      const width = bb.max.x - bb.min.x;
+      const height = bb.max.y - bb.min.y;
+
+      for (let i = 0; i < uv.count; i++) {
+        const x = pos.getX(i);
+        const y = pos.getY(i);
+        const nx = Math.max(0, Math.min(1, (x - bb.min.x) / width));
+        const ny = Math.max(0, Math.min(1, (y - bb.min.y) / height));
+
+        // 轉換為紙張 UV (Canvas V 上下反轉)
+        const u = uMin + nx * (uMax - uMin);
+        const v = 1.0 - (vMin + ny * (vMax - vMin));
+        uv.setXY(i, u, v);
+      }
+      uv.needsUpdate = true;
+    }
+
+    /* 2.1 建立真實鱷魚輪廓 3D 雕塑 */
+    function buildOrganicAlligator() {
       const group = document.querySelector('#alligatorGroup').object3D;
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        roughness: 0.4,
-        metalness: 0.1
+        roughness: 0.35,
+        metalness: 0.05
       });
 
-      // 鱷魚身軀
-      const bodyGeom = new THREE.BoxGeometry(0.38, 0.14, 0.55);
-      remapBoxUV(bodyGeom, 0.2, 0.5, 0.8, 0.82);
-      const bodyMesh = new THREE.Mesh(bodyGeom, mat);
-      bodyMesh.name = "alligator_body";
-      group.add(bodyMesh);
-      clickableObjects.push(bodyMesh);
+      // 嚴格依據 alphabet_ab_single_page.pdf 鱷魚外形描繪路徑
+      const gatorShape = new THREE.Shape();
+      gatorShape.moveTo(-0.48, 0.02); // 嘴尖
+      gatorShape.quadraticCurveTo(-0.42, 0.06, -0.32, 0.08); // 吻部拱起
+      gatorShape.quadraticCurveTo(-0.25, 0.12, -0.22, 0.13); // 眼睛凸起
+      gatorShape.quadraticCurveTo(-0.18, 0.11, -0.12, 0.11); // 後頸部
+      
+      // 背部骨板角質突起 (Serrated Scutes)
+      gatorShape.lineTo(-0.06, 0.13);
+      gatorShape.lineTo(-0.02, 0.11);
+      gatorShape.lineTo( 0.04, 0.13);
+      gatorShape.lineTo( 0.08, 0.11);
+      gatorShape.lineTo( 0.14, 0.12);
+      gatorShape.lineTo( 0.18, 0.10);
+      gatorShape.lineTo( 0.24, 0.11);
 
-      // 鱷魚嘴部
-      const snoutGeom = new THREE.BoxGeometry(0.24, 0.09, 0.35);
-      remapBoxUV(snoutGeom, 0.1, 0.52, 0.35, 0.75);
-      const snoutMesh = new THREE.Mesh(snoutGeom, mat);
-      snoutMesh.position.set(0, -0.02, 0.42);
-      snoutMesh.name = "alligator_snout";
-      group.add(snoutMesh);
-      clickableObjects.push(snoutMesh);
+      // 漸細長尾巴
+      gatorShape.quadraticCurveTo(0.38, 0.08, 0.48, 0.04);
+      gatorShape.lineTo(0.55, 0.01); // 尾尖
+      gatorShape.quadraticCurveTo(0.44, -0.04, 0.30, -0.06);
 
-      // 眼睛
-      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+      // 後腿 (粗壯腳掌)
+      gatorShape.lineTo(0.24, -0.16);
+      gatorShape.quadraticCurveTo(0.18, -0.18, 0.15, -0.16);
+      gatorShape.lineTo(0.18, -0.06);
+
+      // 腹部下曲線
+      gatorShape.quadraticCurveTo(0.05, -0.06, -0.05, -0.06);
+
+      // 前腿 (帶有腳趾爪子)
+      gatorShape.lineTo(-0.10, -0.16);
+      gatorShape.quadraticCurveTo(-0.16, -0.18, -0.19, -0.16);
+      gatorShape.lineTo(-0.15, -0.04);
+
+      // 下顎喉部回到嘴尖
+      gatorShape.quadraticCurveTo(-0.30, -0.03, -0.44, -0.01);
+      gatorShape.lineTo(-0.48, 0.02);
+
+      // 擠出 3D 實體厚度，加上導角使邊緣圓潤
+      const extrudeSettings = {
+        depth: 0.12,
+        bevelEnabled: true,
+        bevelSegments: 4,
+        steps: 2,
+        bevelSize: 0.02,
+        bevelThickness: 0.025
+      };
+
+      const gatorGeom = new THREE.ExtrudeGeometry(gatorShape, extrudeSettings);
+      // 對應圖卡鱷魚區 U: 0.10 ~ 0.90, V: 0.50 ~ 0.85
+      remapContourUV(gatorGeom, 0.10, 0.50, 0.90, 0.85);
+
+      const gatorMesh = new THREE.Mesh(gatorGeom, mat);
+      gatorMesh.name = "organic_alligator";
+      gatorMesh.position.set(0, 0, -0.06);
+      group.add(gatorMesh);
+      clickableObjects.push(gatorMesh);
+
+      // 鱷魚立體金黃眼珠
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
       const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-      [-0.08, 0.08].forEach(x => {
-        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 12, 12), eyeMat);
-        eye.position.set(x, 0.07, 0.22);
-        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), pupilMat);
-        pupil.position.set(x, 0.075, 0.255);
-        group.add(eye);
-        group.add(pupil);
-      });
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), eyeMat);
+      eye.position.set(-0.23, 0.11, 0.08);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.010, 8, 8), pupilMat);
+      pupil.position.set(-0.235, 0.11, 0.098);
+      group.add(eye);
+      group.add(pupil);
 
-      // 尾巴
-      const tailGeom = new THREE.ConeGeometry(0.14, 0.45, 12);
-      tailGeom.rotateX(Math.PI / 2);
-      remapConeUV(tailGeom, 0.6, 0.55, 0.9, 0.85);
-      const tailMesh = new THREE.Mesh(tailGeom, mat);
-      tailMesh.position.set(0, 0, -0.48);
-      tailMesh.name = "alligator_tail";
-      group.add(tailMesh);
-      clickableObjects.push(tailMesh);
-
-      // 水面底板
+      // 沼澤水面
       const waterEl = document.querySelector('#waterPlaneAa');
       if (waterEl) {
         waterEl.addEventListener('loaded', () => {
@@ -378,114 +429,213 @@
       }
     }
 
-    function buildTexturedBear() {
+    /* 2.2 建立真實棕熊輪廓 3D 雕塑 */
+    function buildOrganicBear() {
       const group = document.querySelector('#bearGroup').object3D;
       const mat = new THREE.MeshStandardMaterial({
         map: dynamicTexture,
-        roughness: 0.6,
+        roughness: 0.5,
         metalness: 0.05
       });
 
-      // 熊軀幹
-      const bodyGeom = new THREE.SphereGeometry(0.24, 16, 16);
-      remapSphereUV(bodyGeom, 0.3, 0.45, 0.85, 0.85);
-      const bodyMesh = new THREE.Mesh(bodyGeom, mat);
-      bodyMesh.scale.set(1.0, 1.2, 1.35);
-      bodyMesh.name = "bear_body";
-      group.add(bodyMesh);
-      clickableObjects.push(bodyMesh);
+      // 依據圖卡棕熊身形曲線描繪
+      const bearShape = new THREE.Shape();
+      bearShape.moveTo(-0.30, -0.10); // 口鼻底部
+      bearShape.quadraticCurveTo(-0.35, -0.02, -0.32, 0.04); // 口鼻尖端
+      bearShape.quadraticCurveTo(-0.24, 0.08, -0.19, 0.14); // 額頭與鼻樑
+      
+      // 圓耳朵
+      bearShape.quadraticCurveTo(-0.21, 0.23, -0.15, 0.25);
+      bearShape.quadraticCurveTo(-0.11, 0.24, -0.12, 0.18);
 
-      // 熊頭部
-      const headGeom = new THREE.SphereGeometry(0.18, 16, 16);
-      remapSphereUV(headGeom, 0.15, 0.5, 0.45, 0.8);
-      const headMesh = new THREE.Mesh(headGeom, mat);
-      headMesh.position.set(0, 0.22, 0.26);
-      headMesh.name = "bear_head";
-      group.add(headMesh);
-      clickableObjects.push(headMesh);
+      // 頸背肌肉隆起 (Shoulder Hump)
+      bearShape.quadraticCurveTo(-0.06, 0.23, 0.02, 0.24);
+      // 渾厚熊背
+      bearShape.quadraticCurveTo(0.18, 0.22, 0.32, 0.14);
+      
+      // 臀部與小短尾巴
+      bearShape.lineTo(0.38, 0.08);
+      bearShape.lineTo(0.40, 0.05); // 尾巴
+      bearShape.quadraticCurveTo(0.36, -0.02, 0.32, -0.06);
 
-      // 熊吻部
-      const snoutGeom = new THREE.SphereGeometry(0.075, 12, 12);
-      remapSphereUV(snoutGeom, 0.15, 0.65, 0.35, 0.85);
-      const snoutMesh = new THREE.Mesh(snoutGeom, mat);
-      snoutMesh.position.set(0, 0.18, 0.42);
-      group.add(snoutMesh);
-      clickableObjects.push(snoutMesh);
+      // 後腿 (大腿厚實、腳掌著地)
+      bearShape.lineTo(0.28, -0.22);
+      bearShape.quadraticCurveTo(0.22, -0.25, 0.18, -0.23);
+      bearShape.lineTo(0.19, -0.08);
 
-      // 黑色鼻頭
-      const nose = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), new THREE.MeshBasicMaterial({ color: 0x1e293b }));
-      nose.position.set(0, 0.21, 0.49);
+      // 肚子下緣
+      bearShape.quadraticCurveTo(0.06, -0.08, -0.02, -0.06);
+
+      // 前腿
+      bearShape.lineTo(-0.07, -0.22);
+      bearShape.quadraticCurveTo(-0.13, -0.25, -0.17, -0.23);
+      bearShape.lineTo(-0.12, -0.03);
+
+      // 喉部與下巴回到口鼻
+      bearShape.quadraticCurveTo(-0.22, -0.12, -0.30, -0.10);
+
+      const extrudeSettings = {
+        depth: 0.16,
+        bevelEnabled: true,
+        bevelSegments: 4,
+        steps: 2,
+        bevelSize: 0.025,
+        bevelThickness: 0.03
+      };
+
+      const bearGeom = new THREE.ExtrudeGeometry(bearShape, extrudeSettings);
+      // 對應圖卡棕熊區 U: 0.12 ~ 0.90, V: 0.44 ~ 0.92
+      remapContourUV(bearGeom, 0.12, 0.44, 0.90, 0.92);
+
+      const bearMesh = new THREE.Mesh(bearGeom, mat);
+      bearMesh.name = "organic_bear";
+      bearMesh.position.set(0, 0, -0.08);
+      group.add(bearMesh);
+      clickableObjects.push(bearMesh);
+
+      // 棕熊黑鼻頭與眼睛
+      const noseMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+      const nose = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), noseMat);
+      nose.position.set(-0.33, 0.02, 0.10);
       group.add(nose);
 
-      // 兩隻圓耳朵
-      [-0.14, 0.14].forEach(x => {
-        const earGeom = new THREE.SphereGeometry(0.065, 10, 10);
-        remapSphereUV(earGeom, 0.2, 0.48, 0.4, 0.68);
-        const ear = new THREE.Mesh(earGeom, mat);
-        ear.position.set(x, 0.35, 0.24);
-        group.add(ear);
-        clickableObjects.push(ear);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), noseMat);
+      eye.position.set(-0.20, 0.08, 0.10);
+      group.add(eye);
+
+      // 熊所踩踏的岩石地表
+      const groundEl = document.querySelector('#waterPlaneBb');
+      if (groundEl) {
+        groundEl.addEventListener('loaded', () => {
+          const gMesh = groundEl.getObject3D('mesh');
+          if (gMesh) {
+            gMesh.material = new THREE.MeshBasicMaterial({
+              map: dynamicTexture,
+              transparent: true,
+              opacity: 0.65
+            });
+            gMesh.name = "ground";
+            clickableObjects.push(gMesh);
+          }
+        });
+      }
+    }
+
+    /* 2.3 建立真實字型鏤空立體字母 (Aa 與 Bb) */
+    function buildOrganicLetters() {
+      const mat = new THREE.MeshStandardMaterial({
+        map: dynamicTexture,
+        roughness: 0.3,
+        metalness: 0.05
       });
-    }
 
-    function buildTexturedLetters() {
-      // Aa
-      const aaGroup = document.querySelector('#letterMeshAa').object3D;
-      const letterAaGeom = new THREE.BoxGeometry(0.44, 0.40, 0.14);
-      remapBoxUV(letterAaGeom, 0.15, 0.1, 0.85, 0.42);
-      const aaMesh = new THREE.Mesh(letterAaGeom, new THREE.MeshStandardMaterial({
-        map: dynamicTexture,
-        roughness: 0.3
-      }));
-      aaMesh.name = "letter_Aa";
-      aaGroup.add(aaMesh);
-      clickableObjects.push(aaMesh);
+      const extrudeSettings = {
+        depth: 0.08,
+        bevelEnabled: true,
+        bevelSegments: 3,
+        steps: 1,
+        bevelSize: 0.015,
+        bevelThickness: 0.015
+      };
 
-      // Bb
-      const bbGroup = document.querySelector('#letterMeshBb').object3D;
-      const letterBbGeom = new THREE.BoxGeometry(0.44, 0.40, 0.14);
-      remapBoxUV(letterBbGeom, 0.15, 0.1, 0.85, 0.42);
-      const bbMesh = new THREE.Mesh(letterBbGeom, new THREE.MeshStandardMaterial({
-        map: dynamicTexture,
-        roughness: 0.3
-      }));
-      bbMesh.name = "letter_Bb";
-      bbGroup.add(bbMesh);
-      clickableObjects.push(bbMesh);
-    }
+      // ----------------- 大寫 A -----------------
+      const shapeA = new THREE.Shape();
+      shapeA.moveTo(-0.16, -0.16);
+      shapeA.lineTo(-0.04,  0.18);
+      shapeA.lineTo( 0.04,  0.18);
+      shapeA.lineTo( 0.16, -0.16);
+      shapeA.lineTo( 0.08, -0.16);
+      shapeA.lineTo( 0.04, -0.04);
+      shapeA.lineTo(-0.04, -0.04);
+      shapeA.lineTo(-0.08, -0.16);
+      shapeA.closePath();
 
-    function remapBoxUV(geometry, uMin, vMin, uMax, vMax) {
-      const uv = geometry.attributes.uv;
-      for (let i = 0; i < uv.count; i++) {
-        let u = uv.getX(i);
-        let v = uv.getY(i);
-        uv.setXY(i, uMin + u * (uMax - uMin), (1.0 - (vMin + (1.0 - v) * (vMax - vMin))));
-      }
-      uv.needsUpdate = true;
-    }
+      // A 的中空三角形鏤空洞 (Hole)
+      const holeA = new THREE.Path();
+      holeA.moveTo( 0.0,   0.09);
+      holeA.lineTo(-0.025, 0.02);
+      holeA.lineTo( 0.025, 0.02);
+      holeA.closePath();
+      shapeA.holes.push(holeA);
 
-    function remapSphereUV(geometry, uMin, vMin, uMax, vMax) {
-      const uv = geometry.attributes.uv;
-      for (let i = 0; i < uv.count; i++) {
-        let u = uv.getX(i);
-        let v = uv.getY(i);
-        uv.setXY(i, uMin + u * (uMax - uMin), (1.0 - (vMin + (1.0 - v) * (vMax - vMin))));
-      }
-      uv.needsUpdate = true;
-    }
+      // 小寫 a
+      const shape_a = new THREE.Shape();
+      shape_a.moveTo(0.18, -0.16);
+      shape_a.lineTo(0.24, -0.16);
+      shape_a.lineTo(0.24,  0.03);
+      shape_a.quadraticCurveTo(0.22, 0.08, 0.16, 0.08);
+      shape_a.quadraticCurveTo(0.10, 0.08, 0.09, 0.03);
+      shape_a.lineTo(0.09, -0.08);
+      shape_a.quadraticCurveTo(0.12, -0.16, 0.18, -0.16);
+      shape_a.closePath();
 
-    function remapConeUV(geometry, uMin, vMin, uMax, vMax) {
-      const uv = geometry.attributes.uv;
-      for (let i = 0; i < uv.count; i++) {
-        let u = uv.getX(i);
-        let v = uv.getY(i);
-        uv.setXY(i, uMin + u * (uMax - uMin), (1.0 - (vMin + (1.0 - v) * (vMax - vMin))));
-      }
-      uv.needsUpdate = true;
+      const geomA = new THREE.ExtrudeGeometry([shapeA, shape_a], extrudeSettings);
+      remapContourUV(geomA, 0.14, 0.08, 0.86, 0.44);
+
+      const meshAa = new THREE.Mesh(geomA, mat);
+      meshAa.name = "letter_Aa";
+      document.querySelector('#letterMeshAa').object3D.add(meshAa);
+      clickableObjects.push(meshAa);
+
+      // ----------------- 大寫 B -----------------
+      const shapeB = new THREE.Shape();
+      shapeB.moveTo(-0.16, -0.16);
+      shapeB.lineTo(-0.16,  0.18);
+      shapeB.lineTo( 0.03,  0.18);
+      shapeB.quadraticCurveTo(0.15, 0.18, 0.15, 0.04);
+      shapeB.quadraticCurveTo(0.15, 0.00, 0.08, -0.01);
+      shapeB.quadraticCurveTo(0.16, -0.02, 0.16, -0.10);
+      shapeB.quadraticCurveTo(0.16, -0.16, 0.04, -0.16);
+      shapeB.closePath();
+
+      // B 的上下兩顆鏤空洞
+      const holeB1 = new THREE.Path();
+      holeB1.moveTo(-0.09,  0.04);
+      holeB1.lineTo(-0.09,  0.12);
+      holeB1.lineTo( 0.02,  0.12);
+      holeB1.quadraticCurveTo(0.07, 0.12, 0.07, 0.08);
+      holeB1.quadraticCurveTo(0.07, 0.04, 0.02, 0.04);
+      holeB1.closePath();
+      shapeB.holes.push(holeB1);
+
+      const holeB2 = new THREE.Path();
+      holeB2.moveTo(-0.09, -0.10);
+      holeB2.lineTo(-0.09, -0.02);
+      holeB2.lineTo( 0.03, -0.02);
+      holeB2.quadraticCurveTo(0.08, -0.02, 0.08, -0.06);
+      holeB2.quadraticCurveTo(0.08, -0.10, 0.03, -0.10);
+      holeB2.closePath();
+      shapeB.holes.push(holeB2);
+
+      // 小寫 b
+      const shape_b = new THREE.Shape();
+      shape_b.moveTo(0.18, -0.16);
+      shape_b.lineTo(0.18,  0.18);
+      shape_b.lineTo(0.24,  0.18);
+      shape_b.lineTo(0.24,  0.06);
+      shape_b.quadraticCurveTo(0.33, 0.06, 0.33, -0.05);
+      shape_b.quadraticCurveTo(0.33, -0.16, 0.24, -0.16);
+      shape_b.closePath();
+
+      const hole_b = new THREE.Path();
+      hole_b.moveTo(0.24, -0.10);
+      hole_b.lineTo(0.24, -0.00);
+      hole_b.quadraticCurveTo(0.28, -0.00, 0.28, -0.05);
+      hole_b.quadraticCurveTo(0.28, -0.10, 0.24, -0.10);
+      hole_b.closePath();
+      shape_b.holes.push(hole_b);
+
+      const geomB = new THREE.ExtrudeGeometry([shapeB, shape_b], extrudeSettings);
+      remapContourUV(geomB, 0.14, 0.08, 0.86, 0.44);
+
+      const meshBb = new THREE.Mesh(geomB, mat);
+      meshBb.name = "letter_Bb";
+      document.querySelector('#letterMeshBb').object3D.add(meshBb);
+      clickableObjects.push(meshBb);
     }
 
     /* =========================================================
-       3. 觸控螢幕手勢系統 (Raycast 點擊 + 單指滑動旋轉 + 雙指捏合縮放)
+       3. 觸控手勢系統 (Raycast 點擊 + 旋轉 + 縮放)
        ========================================================= */
     function setupTouchRaycaster() {
       const raycaster = new THREE.Raycaster();
@@ -498,16 +648,13 @@
       let initialPinchDist = 0;
       let initialScale = 1.0;
 
-      // 取得當前作用中的動物旋轉容器
       function getActiveRotator() {
         const id = (activeTarget === 'Aa') ? '#alligatorRotator' : '#bearRotator';
         return document.querySelector(id)?.object3D;
       }
 
       window.addEventListener('pointerdown', (e) => {
-        // 若點在按鈕或選單上則不觸發 3D 互動
         if (e.target.closest('#hud-top, #hud-bottom, #preview-badge, button')) return;
-
         touchStartX = e.clientX;
         touchStartY = e.clientY;
         touchStartTime = Date.now();
@@ -521,12 +668,10 @@
         const dx = e.clientX - touchStartX;
         const dy = e.clientY - touchStartY;
 
-        // 若滑動超過 8px 判定為旋轉拖曳手勢
         if (Math.hypot(dx, dy) > 8) {
           isDragging = true;
           const rotator = getActiveRotator();
           if (rotator) {
-            // 單指左右滑動旋轉 360 度
             rotator.rotation.y += dx * 0.012;
           }
           touchStartX = e.clientX;
@@ -538,14 +683,12 @@
         if (e.target.closest('#hud-top, #hud-bottom, #preview-badge, button')) return;
 
         const touchDuration = Date.now() - touchStartTime;
-        // 若時間小於 300ms 且沒有拖曳，判定為「點擊 (Tap)」
         if (!isDragging && touchDuration < 350) {
           handleScreenTap(e.clientX, e.clientY);
         }
         isDragging = false;
       });
 
-      // 支援手機雙指捏合縮放 (Pinch to Zoom)
       window.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
@@ -570,7 +713,6 @@
         }
       }, { passive: true });
 
-      // 觸控點擊射線判定
       function handleScreenTap(clientX, clientY) {
         if (!sceneEl.camera) return;
 
@@ -589,12 +731,10 @@
       }
     }
 
-    // 依據點選之 3D 部位觸發專屬動作、動畫與語音
     function onObjectTapped(name) {
       const toast = document.getElementById('toast-msg');
 
       if (name.includes('letter')) {
-        // 點選 3D 字母：觸發 360 度翻滾跳躍與自然發音
         const letterGroup = (activeTarget === 'Aa')
           ? document.querySelector('#letterMeshAa')
           : document.querySelector('#letterMeshBb');
@@ -609,61 +749,53 @@
           setTimeout(() => { letterGroup.removeAttribute('animation__spin'); }, 850);
         }
 
-        toast.innerText = (activeTarget === 'Aa') ? "✨ 點擊字母 Aa！" : "✨ 點擊字母 Bb！";
+        toast.innerText = (activeTarget === 'Aa') ? "✨ 點擊立體字母 Aa！" : "✨ 點擊立體字母 Bb！";
         showToast();
         playPhonicsAudio();
 
       } else if (name.includes('alligator')) {
-        // 點選鱷魚主體：張大嘴咬合 (Chomp!)
-        const snout = document.querySelector('#alligatorGroup').object3D.getObjectByName('alligator_snout');
-        const tail = document.querySelector('#alligatorGroup').object3D.getObjectByName('alligator_tail');
-        if (snout) {
-          snout.rotation.x = -0.45;
-          if (tail) tail.rotation.z = 0.3;
+        const gator = document.querySelector('#alligatorGroup').object3D;
+        if (gator) {
+          // 鱷魚彈跳與嘴部前傾咬合動畫
+          gator.position.y = 0.08;
+          gator.rotation.x = 0.45;
           setTimeout(() => {
-            snout.rotation.x = 0;
-            if (tail) tail.rotation.z = -0.3;
-            setTimeout(() => { if (tail) tail.rotation.z = 0; }, 200);
-          }, 400);
+            gator.position.y = 0;
+            gator.rotation.x = 0.35;
+          }, 350);
         }
-        toast.innerText = "🐊 鱷魚張嘴：Snap! Chomp!";
+        toast.innerText = "🐊 鱷魚咬合：Snap! Chomp!";
         showToast();
         speakPhonics("Snap! Chomp! Alligator!");
 
       } else if (name.includes('bear')) {
-        // 點選棕熊主體：晃動頭部與咆哮 (Growl!)
-        const head = document.querySelector('#bearGroup').object3D.getObjectByName('bear_head');
-        if (head) {
-          head.rotation.y = 0.5;
-          head.position.y = 0.28;
+        const bear = document.querySelector('#bearGroup').object3D;
+        if (bear) {
+          // 棕熊站立咆哮動畫
+          bear.rotation.x = -0.15;
+          bear.position.y = 0.12;
           setTimeout(() => {
-            head.rotation.y = -0.5;
-            setTimeout(() => {
-              head.rotation.y = 0;
-              head.position.y = 0.22;
-            }, 300);
-          }, 300);
+            bear.rotation.x = 0.26;
+            bear.position.y = 0;
+          }, 450);
         }
         toast.innerText = "🐻 棕熊咆哮：Growl!";
         showToast();
         speakPhonics("Roar! Bear!");
 
-      } else if (name.includes('water')) {
-        // 點選水面：激起水花
-        toast.innerText = "💦 激起沼澤漣漪水花！";
+      } else if (name.includes('water') || name.includes('ground')) {
+        toast.innerText = "💦 激起水花與落葉！";
         showToast();
         speakPhonics("Splash!");
       }
     }
 
-    // 觸控微震動回饋 (增加手機玩具實體手感)
     function triggerHapticFeedback() {
       if (navigator.vibrate) {
         navigator.vibrate(40);
       }
     }
 
-    // 點擊螢幕爆發彩色發光粒子
     function createSparkleEffect(x, y) {
       const sparkle = document.createElement('div');
       sparkle.className = 'tap-sparkle';
@@ -680,7 +812,6 @@
       setTimeout(() => { toast.style.opacity = '0'; }, 1800);
     }
 
-    // 重設角度與大小
     function resetModelPose() {
       const rotAa = document.querySelector('#alligatorRotator')?.object3D;
       const rotBb = document.querySelector('#bearRotator')?.object3D;
@@ -853,7 +984,7 @@
     targetAa.addEventListener("targetFound", () => {
       activeTarget = 'Aa';
       isTargetTracked = true;
-      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (點擊角色互動)</b>";
+      hudText.innerHTML = "🐊 <b>鎖定成功：Alligator (真實輪廓雕塑)</b>";
       btnText.innerText = "自然發音 Aa";
       setTimeout(extractPaperColoring, 100);
       speakPhonics("A is for Alligator!");
@@ -861,13 +992,13 @@
 
     targetAa.addEventListener("targetLost", () => {
       isTargetTracked = false;
-      hudText.innerText = "請將鏡頭對準學習單「Aa」或「Bb」";
+      hudText.innerHTML = "請將鏡頭對準學習單「Aa」或「Bb」";
     });
 
     targetBb.addEventListener("targetFound", () => {
       activeTarget = 'Bb';
       isTargetTracked = true;
-      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (點擊角色互動)</b>";
+      hudText.innerHTML = "🐻 <b>鎖定成功：Bear (真實輪廓雕塑)</b>";
       btnText.innerText = "自然發音 Bb";
       setTimeout(extractPaperColoring, 100);
       speakPhonics("B is for Bear!");
@@ -875,14 +1006,14 @@
 
     targetBb.addEventListener("targetLost", () => {
       isTargetTracked = false;
-      hudText.innerText = "請將鏡頭對準學習單「Aa」或「Bb」";
+      hudText.innerHTML = "請將鏡頭對準學習單「Aa」或「Bb」";
     });
 
     function captureAndLockColoring() {
       const ok = extractPaperColoring();
       const toast = document.getElementById('toast-msg');
       if (ok) {
-        toast.innerText = `✨ 已鎖定「${activeTarget === 'Aa' ? '鱷魚' : '棕熊'}」塗鴉！可任意旋轉觀看！`;
+        toast.innerText = `✨ 已鎖定「${activeTarget === 'Aa' ? '鱷魚' : '棕熊'}」真形輪廓塗鴉！`;
         showToast();
         triggerHapticFeedback();
         speakPhonics("Great coloring!");
