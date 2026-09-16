@@ -157,6 +157,10 @@
       background: linear-gradient(135deg, #f43f5e, #be123c);
       box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
     }
+    .btn-dotday {
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      box-shadow: 0 4px 14px rgba(236, 72, 153, 0.45);
+    }
     .btn-toggle {
       background: rgba(30, 41, 59, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -326,7 +330,9 @@
     <div id="snapshot-card">
       <img id="snapshot-img" alt="AR Snapshot" />
       <div id="snapshot-caption">🐊 My 3D Alligator</div>
-      <div style="display:flex; gap:10px; justify-content:center; margin-top:14px;">
+      <div id="snapshot-code" style="font-family: monospace; font-size: 13px; color: #4f46e5; font-weight: bold; background: #e0e7ff; padding: 4px 12px; border-radius: 8px; display: inline-block; margin: 6px 0;">CODE: DOT-89241</div>
+      <div style="font-size: 11px; color: #059669; font-weight: bold; margin-bottom: 6px;">🌐 國際圓點節 藝廊分享認證 (Celebrate Dot Day)</div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
         <button class="action-btn btn-green" onclick="downloadSnapshot()">📥 儲存照片</button>
         <button class="action-btn btn-toggle" onclick="closeSnapshotModal()">關閉</button>
       </div>
@@ -340,6 +346,9 @@
     </button>
     <button class="action-btn btn-rose" onclick="takeARSnapshot()">
       <span>📷</span><span>拍照合影</span>
+    </button>
+    <button class="action-btn btn-dotday" onclick="toggleDotDayMode()">
+      <span>🔮</span><span id="dotday-btn-label">圓點星球</span>
     </button>
     <button class="action-btn btn-green" onclick="playPhonicsAudio()">
       <span>🗣️</span><span id="btn-text">自然發音</span>
@@ -380,6 +389,11 @@
       <a-entity id="alligatorRotator" position="0 -0.184 0.03">
         <a-entity id="alligatorGroup" rotation="0 0 0"></a-entity>
       </a-entity>
+
+      <!-- Quiver 3D Dot Day 夢幻彩繪星球 (預設隱藏，按鈕可切換) -->
+      <a-entity id="dotOrbRotatorAa" position="0 0.02 0.12" visible="false">
+        <a-entity id="dotOrbGroupAa" rotation="0 0 0"></a-entity>
+      </a-entity>
     </a-entity>
 
     <!-- ================= 標靶 1：Bb Bear ================= -->
@@ -390,6 +404,11 @@
       <!-- 3D 棕熊真形雕塑 -->
       <a-entity id="bearRotator" position="0 -0.202 0.03">
         <a-entity id="bearGroup" rotation="0 0 0"></a-entity>
+      </a-entity>
+
+      <!-- Quiver 3D Dot Day 夢幻彩繪星球 (預設隱藏) -->
+      <a-entity id="dotOrbRotatorBb" position="0 0.02 0.12" visible="false">
+        <a-entity id="dotOrbGroupBb" rotation="0 0 0"></a-entity>
       </a-entity>
     </a-entity>
 
@@ -530,6 +549,8 @@
     sceneEl.addEventListener('loaded', () => {
       buildAccurateAlligator();
       buildAccurateBear();
+      buildDotDayOrbs();
+      spawnFloatingBubbles();
       buildCandyLetters();
       setupTouchRaycaster();
     });
@@ -730,6 +751,94 @@
       const nose = new THREE.Mesh(new THREE.SphereGeometry(0.016, 12, 12), noseMat);
       nose.position.set(-0.47, -0.14, 0.09);
       group.add(nose);
+    }
+
+    /* =========================================================
+       Quiver 國際圓點節 3D 夢幻彩繪星球與 3D 飄浮泡泡迷你遊戲
+       ========================================================= */
+    const activeBubbles = [];
+
+    function buildDotDayOrbs() {
+      const orbMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: dynamicTexture,
+        roughness: 0.15,
+        metalness: 0.0
+      });
+
+      // 1. Aa 標靶 3D 圓點星球
+      const groupAa = document.querySelector('#dotOrbGroupAa')?.object3D;
+      if (groupAa) {
+        const sphereGeom = new THREE.SphereGeometry(0.25, 32, 32);
+        const orbMesh = new THREE.Mesh(sphereGeom, orbMat);
+        orbMesh.name = "dot_orb_Aa";
+        groupAa.add(orbMesh);
+        clickableObjects.push(orbMesh);
+
+        // 3D 夢幻銀河環 (Galaxy Ring)
+        const ringGeom = new THREE.RingGeometry(0.32, 0.38, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xec4899, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+        const ring = new THREE.Mesh(ringGeom, ringMat);
+        ring.name = "galaxy_ring_Aa";
+        ring.rotation.x = Math.PI / 3;
+        groupAa.add(ring);
+      }
+
+      // 2. Bb 標靶 3D 圓點星球
+      const groupBb = document.querySelector('#dotOrbGroupBb')?.object3D;
+      if (groupBb) {
+        const sphereGeom = new THREE.SphereGeometry(0.25, 32, 32);
+        const orbMesh = new THREE.Mesh(sphereGeom, orbMat);
+        orbMesh.name = "dot_orb_Bb";
+        groupBb.add(orbMesh);
+        clickableObjects.push(orbMesh);
+
+        const ringGeom = new THREE.RingGeometry(0.32, 0.38, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, side: THREE.DoubleSide, transparent: true, opacity: 0.7 });
+        const ring = new THREE.Mesh(ringGeom, ringMat);
+        ring.name = "galaxy_ring_Bb";
+        ring.rotation.x = Math.PI / 3;
+        groupBb.add(ring);
+      }
+    }
+
+    function spawnFloatingBubbles() {
+      const bubbleColors = [0x60a5fa, 0xf472b6, 0x34d399, 0xfbbf24, 0xa78bfa, 0x38bdf8];
+      const gatorGroup = document.querySelector('#alligatorGroup')?.object3D;
+      const bearGroup = document.querySelector('#bearGroup')?.object3D;
+
+      const targetGroups = [gatorGroup, bearGroup];
+      targetGroups.forEach(grp => {
+        if (!grp) return;
+        for (let i = 0; i < 5; i++) {
+          const rad = 0.035 + Math.random() * 0.035;
+          const bGeom = new THREE.SphereGeometry(rad, 16, 16);
+          const col = bubbleColors[i % bubbleColors.length];
+          const bMat = new THREE.MeshStandardMaterial({
+            color: col,
+            transparent: true,
+            opacity: 0.75,
+            roughness: 0.05,
+            metalness: 0.1
+          });
+          const bubble = new THREE.Mesh(bGeom, bMat);
+          bubble.name = `bubble_${i}_${Math.floor(Math.random()*1000)}`;
+          bubble.position.set(
+            (Math.random() - 0.5) * 0.6,
+            (Math.random() - 0.5) * 0.3 + 0.1,
+            (Math.random() - 0.5) * 0.3 + 0.1
+          );
+          bubble.userData = {
+            speedY: 0.0015 + Math.random() * 0.002,
+            initialY: bubble.position.y,
+            floatAmp: 0.003 + Math.random() * 0.004,
+            seed: Math.random() * 10
+          };
+          grp.add(bubble);
+          activeBubbles.push(bubble);
+          clickableObjects.push(bubble);
+        }
+      });
     }
 
     function buildCandyLetters() {
@@ -1080,6 +1189,8 @@
        ========================================================= */
     let globalClock = 0;
     let lastExtractTime = 0;
+    let isDotDayOrbMode = false;
+    let popScore = 0;
 
     function renderBiomeLoop(timestamp) {
       globalClock += 0.035;
@@ -1091,13 +1202,34 @@
             gator.rotation.z = Math.sin(globalClock * 1.6) * 0.025;
             gator.position.y = Math.sin(globalClock * 2.2) * 0.004;
           }
+          const orbAa = document.querySelector('#dotOrbGroupAa')?.object3D;
+          if (orbAa) {
+            orbAa.rotation.y += 0.012;
+            orbAa.rotation.z = Math.sin(globalClock * 1.2) * 0.04;
+          }
         } else {
           const bear = document.querySelector('#bearGroup')?.object3D;
           if (bear) {
             bear.rotation.y = Math.sin(globalClock * 1.2) * 0.03;
             bear.position.y = Math.sin(globalClock * 1.8) * 0.004;
           }
+          const orbBb = document.querySelector('#dotOrbGroupBb')?.object3D;
+          if (orbBb) {
+            orbBb.rotation.y += 0.012;
+            orbBb.rotation.z = Math.sin(globalClock * 1.2) * 0.04;
+          }
         }
+
+        // 3D AR 氣泡動態飄浮
+        activeBubbles.forEach(b => {
+          if (b && b.visible) {
+            b.position.y += b.userData.speedY;
+            b.position.x += Math.sin(globalClock * 2 + b.userData.seed) * 0.0012;
+            if (b.position.y > 0.45) {
+              b.position.y = -0.15;
+            }
+          }
+        });
 
         if (isLiveSync && (timestamp - lastExtractTime > 200)) {
           extractPaperColoring();
@@ -1152,6 +1284,38 @@
         hudText.innerText = "請將鏡頭對準學習單「Aa」或「Bb」";
       }
     });
+
+    function toggleDotDayMode() {
+      initAudioContext();
+      isDotDayOrbMode = !isDotDayOrbMode;
+      const label = document.querySelector('#dotday-btn-label');
+
+      const gatorRotator = document.querySelector('#alligatorRotator');
+      const dotOrbAa = document.querySelector('#dotOrbRotatorAa');
+
+      const bearRotator = document.querySelector('#bearRotator');
+      const dotOrbBb = document.querySelector('#dotOrbRotatorBb');
+
+      if (isDotDayOrbMode) {
+        if (gatorRotator) gatorRotator.setAttribute('visible', 'false');
+        if (dotOrbAa) dotOrbAa.setAttribute('visible', 'true');
+        if (bearRotator) bearRotator.setAttribute('visible', 'false');
+        if (dotOrbBb) dotOrbBb.setAttribute('visible', 'true');
+
+        if (label) label.innerText = "1:1真形雕塑";
+        showToast("🔮 切換至【Quiver 國際圓點節 3D 夢幻彩繪星球】！");
+        playSFX('pop');
+      } else {
+        if (gatorRotator) gatorRotator.setAttribute('visible', 'true');
+        if (dotOrbAa) dotOrbAa.setAttribute('visible', 'false');
+        if (bearRotator) bearRotator.setAttribute('visible', 'true');
+        if (dotOrbBb) dotOrbBb.setAttribute('visible', 'false');
+
+        if (label) label.innerText = "圓點星球";
+        showToast("🐊 切換回【1:1 精確貼合真形 3D 雕塑】");
+        playSFX('bubble');
+      }
+    }
 
     /* =========================================================
        8. 全觸控手勢系統：360° 旋轉、雙指縮放、射線拾取
@@ -1232,6 +1396,10 @@
     }
 
     function getCurrentRotator() {
+      if (isDotDayOrbMode) {
+        const id = (activeTarget === 'Aa') ? '#dotOrbRotatorAa' : '#dotOrbRotatorBb';
+        return document.querySelector(id)?.object3D;
+      }
       const id = (activeTarget === 'Aa') ? '#alligatorRotator' : '#bearRotator';
       return document.querySelector(id)?.object3D;
     }
@@ -1249,6 +1417,23 @@
     }
 
     function handleObjectTap(obj) {
+      if (obj.name && obj.name.startsWith('bubble_')) {
+        playSFX('pop');
+        popScore += 10;
+        showToast(`🎈 戳破 3D 彩色泡泡！得分 +10 (累計: ${popScore} pts)`);
+
+        obj.scale.set(1.6, 1.6, 1.6);
+        setTimeout(() => {
+          obj.position.set(
+            (Math.random() - 0.5) * 0.6,
+            -0.15,
+            (Math.random() - 0.5) * 0.3 + 0.1
+          );
+          obj.scale.set(1, 1, 1);
+        }, 120);
+        return;
+      }
+
       if (obj.name && obj.name.startsWith('letter_')) {
         playPhonicsAudio();
         animateLetterJump(obj);
@@ -1488,22 +1673,33 @@
       sCtx.strokeStyle = '#ffffff';
       sCtx.strokeRect(0, 0, snapCanvas.width, snapCanvas.height);
 
-      sCtx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-      sCtx.fillRect(20, snapCanvas.height - 70, snapCanvas.width - 40, 50);
+      // Quiver Style Banner
+      sCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      sCtx.fillRect(20, snapCanvas.height - 85, snapCanvas.width - 40, 65);
 
-      sCtx.font = 'bold 22px Arial, sans-serif';
+      sCtx.font = 'bold 20px Arial, sans-serif';
       sCtx.fillStyle = '#fef08a';
-      sCtx.fillText(`✨ Quiver AR 3D Coloring • ${activeTarget === 'Aa' ? 'Alligator' : 'Bear'}`, 36, snapCanvas.height - 38);
+      sCtx.fillText(`✨ Quiver AR 3D Coloring • ${activeTarget === 'Aa' ? 'Alligator' : 'Bear'}`, 36, snapCanvas.height - 50);
+
+      const codeNum = Math.floor(10000 + Math.random() * 90000);
+      const codeStr = `DOT-${codeNum}`;
+
+      sCtx.font = 'bold 14px monospace';
+      sCtx.fillStyle = '#67e8f9';
+      sCtx.fillText(`CREATION CODE: ${codeStr} | GALAXIES CERTIFIED`, 36, snapCanvas.height - 28);
 
       const dataUrl = snapCanvas.toDataURL('image/jpeg', 0.92);
       const img = document.getElementById('snapshot-img');
       img.src = dataUrl;
       document.getElementById('snapshot-caption').innerText = (activeTarget === 'Aa')
-        ? "🐊 My 3D Alligator"
-        : "🐻 My 3D Bear";
+        ? "🐊 My 3D Alligator (Celebrate Dot Day)"
+        : "🐻 My 3D Bear (Celebrate Dot Day)";
+
+      const codeEl = document.getElementById('snapshot-code');
+      if (codeEl) codeEl.innerText = `CREATION CODE: ${codeStr}`;
 
       document.getElementById('snapshot-modal').style.display = 'flex';
-      showToast("📸 拍照完成！可保存相片");
+      showToast(`📸 3D Polaroid 照片已生成！藝廊分享碼: ${codeStr}`);
     }
 
     function closeSnapshotModal() {
