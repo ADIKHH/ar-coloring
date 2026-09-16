@@ -501,14 +501,17 @@
        2. 核心著色紋理與純白基準畫布
        ========================================================= */
     const textureCanvas = document.createElement('canvas');
-    textureCanvas.width = 512;
-    textureCanvas.height = 680;
+    textureCanvas.width = 1155;
+    textureCanvas.height = 1536;
     const texCtx = textureCanvas.getContext('2d', { willReadFrequently: true });
     texCtx.fillStyle = '#ffffff';
-    texCtx.fillRect(0, 0, 512, 680);
+    texCtx.fillRect(0, 0, 1155, 1536);
 
     const dynamicTexture = new THREE.CanvasTexture(textureCanvas);
     dynamicTexture.colorSpace = THREE.SRGBColorSpace || THREE.sRGBEncoding;
+    dynamicTexture.generateMipmaps = false;
+    dynamicTexture.minFilter = THREE.LinearFilter;
+    dynamicTexture.magFilter = THREE.LinearFilter;
 
     const previewCanvas = document.getElementById('preview-canvas');
     const prevCtx = previewCanvas.getContext('2d');
@@ -892,10 +895,11 @@
       const imgData = ctx.getImageData(0, 0, W, H);
       const data = imgData.data;
 
+      // 1. 白平衡基準計算 (Wr, Wg, Wb)
       let sumWr = 0, sumWg = 0, sumWb = 0, wCount = 0;
-      for (let i = 0; i < data.length; i += 16) {
+      for (let i = 0; i < data.length; i += 32) {
         const lum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-        if (lum > 140) {
+        if (lum > 130) {
           sumWr += data[i];
           sumWg += data[i+1];
           sumWb += data[i+2];
@@ -907,7 +911,6 @@
       const Wg = (wCount > 50) ? (sumWg / wCount) : 195;
       const Wb = (wCount > 50) ? (sumWb / wCount) : 185;
 
-      const threshold = 0.085;
       const isColored = new Uint8Array(W * H);
       let coloredPixelCount = 0;
 
@@ -917,82 +920,87 @@
         const b = data[i + 2];
 
         const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        const maxRGB = Math.max(r, g, b);
-        const minRGB = Math.min(r, g, b);
-        const delta = maxRGB - minRGB;
+        const maxC = Math.max(r, g, b);
+        const minC = Math.min(r, g, b);
+        const delta = maxC - minC;
+        const sat = (maxC > 0) ? (delta / maxC) : 0;
 
-        const rn = r / Wr;
-        const gn = g / Wg;
-        const bn = b / Wb;
+        // 判定真實彩繪筆觸規則 (紅、綠、藍、黃、橘、紫、棕與高飽和度)
+        const isRed    = (r > 110) && (r - g > 35) && (r - b > 35);
+        const isGreen  = (g > 90)  && (g - r > 25) && (g - b > 25);
+        const isBlue   = (b > 90)  && (b - r > 28) && (b - g > 20);
+        const isYellow = (r > 130) && (g > 120) && ((r + g)/2.0 - b > 48);
+        const isOrange = (r > 140) && (g > 80)  && (r - b > 50) && (r - g > 25);
+        const isPurple = (r > 90)  && (b > 100) && (b - g > 30) && (r - g > 20);
+        const isBrown  = (r > 80)  && (g > 45)  && (r - g > 25) && (g - b > 15) && (r - b > 40) && (r < 210);
+        const isHighSat = (sat > 0.24) && (delta > 40) && (lum > 55) && (lum < 230);
 
-        const d_rg = Math.abs(rn - gn);
-        const d_gb = Math.abs(gn - bn);
-        const d_br = Math.abs(bn - rn);
-        const chromaDist = Math.max(d_rg, d_gb, d_br);
-
-        // 徹底淨化規則：
-        // 1. 黑墨線、螢幕像素黑網、暗影 (lum < 95 或 maxRGB < 100) ➔ 100% 純白雪瓷 (#ffffff)
-        // 2. 白紙反光、微弱陰影 (chromaDist < threshold 或 delta < 24) ➔ 100% 純白雪瓷 (#ffffff)
-        if (lum < 95 || maxRGB < 100 || chromaDist < threshold || delta < 24) {
-          data[i]     = 255;
-          data[i + 1] = 255;
-          data[i + 2] = 255;
-          isColored[p] = 0;
-        } else {
+        if (isRed || isGreen || isBlue || isYellow || isOrange || isPurple || isBrown || isHighSat) {
           // 真實彩繪筆觸：提升鮮豔度與對比
-          const maxC = Math.max(rn, gn, bn);
-          const minC = Math.min(rn, gn, bn);
-          const l = (maxC + minC) / 2;
+          const rn = r / Wr;
+          const gn = g / Wg;
+          const bn = b / Wb;
+          const l = (Math.max(rn, gn, bn) + Math.min(rn, gn, bn)) / 2;
 
           const boost = 1.35;
-          let cr = l + (rn - l) * boost;
-          let cg = l + (gn - l) * boost;
-          let cb = l + (bn - l) * boost;
-
-          cr = Math.pow(Math.max(0, cr), 0.92);
-          cg = Math.pow(Math.max(0, cg), 0.92);
-          cb = Math.pow(Math.max(0, cb), 0.92);
+          let cr = Math.pow(Math.max(0, l + (rn - l) * boost), 0.92);
+          let cg = Math.pow(Math.max(0, l + (gn - l) * boost), 0.92);
+          let cb = Math.pow(Math.max(0, l + (bn - l) * boost), 0.92);
 
           data[i]     = Math.min(255, Math.max(0, Math.round(cr * 255)));
           data[i + 1] = Math.min(255, Math.max(0, Math.round(cg * 255)));
           data[i + 2] = Math.min(255, Math.max(0, Math.round(cb * 255)));
           isColored[p] = 1;
           coloredPixelCount++;
+        } else {
+          // 無塗色、白紙陰影、印刷黑線 ➔ 100% 潔白雪瓷 (#ffffff)
+          data[i]     = 255;
+          data[i + 1] = 255;
+          data[i + 2] = 255;
+          isColored[p] = 0;
         }
       }
 
-      // 邊緣色彩微擴張 (Color Dilation 2 像素)：
-      // 當使用者有塗色時，將彩繪向外擴展 2 像素覆蓋黑線與白框邊界，確保 3D 邊緣 100% 豐潤滿版！
-      if (coloredPixelCount > 80) {
-        for (let pass = 0; pass < 2; pass++) {
-          const toFill = [];
-          for (let y = 1; y < H - 1; y++) {
-            const row = y * W;
-            for (let x = 1; x < W - 1; x++) {
-              const p = row + x;
-              if (isColored[p] === 0) {
-                const n1 = p - 1, n2 = p + 1, n3 = p - W, n4 = p + W;
-                let srcP = -1;
-                if (isColored[n1] === 1) srcP = n1;
-                else if (isColored[n2] === 1) srcP = n2;
-                else if (isColored[n3] === 1) srcP = n3;
-                else if (isColored[n4] === 1) srcP = n4;
+      // 嚴格未塗色保護：若全圖彩繪像素 < 250 (白紙/未塗色狀態) ➔ 全圖 100% 潔白無瑕 (#ffffff)！
+      if (coloredPixelCount < 250) {
+        for (let i = 0; i < data.length; i += 4) {
+          data[i]     = 255;
+          data[i + 1] = 255;
+          data[i + 2] = 255;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        return;
+      }
 
-                if (srcP !== -1) {
-                  const sIdx = srcP * 4;
-                  toFill.push(p, data[sIdx], data[sIdx + 1], data[sIdx + 2]);
-                }
+      // 當孩子有塗色時：進行 2 像素彩繪邊緣外擴 (Color Dilation 覆蓋黑線與邊框)
+      for (let pass = 0; pass < 2; pass++) {
+        const toFill = [];
+        for (let y = 1; y < H - 1; y++) {
+          const row = y * W;
+          for (let x = 1; x < W - 1; x++) {
+            const p = row + x;
+            if (isColored[p] === 0) {
+              const n1 = p - 1, n2 = p + 1, n3 = p - W, n4 = p + W;
+              let srcP = -1;
+              if (isColored[n1] === 1) srcP = n1;
+              else if (isColored[n2] === 1) srcP = n2;
+              else if (isColored[n3] === 1) srcP = n3;
+              else if (isColored[n4] === 1) srcP = n4;
+
+              if (srcP !== -1) {
+                const sIdx = srcP * 4;
+                toFill.push(p, data[sIdx], data[sIdx + 1], data[sIdx + 2]);
               }
             }
           }
-          for (let k = 0; k < toFill.length; k += 4) {
-            const p = toFill[k];
-            const dIdx = p * 4;
-            data[dIdx]     = toFill[k + 1];
-            data[dIdx + 1] = toFill[k + 2];
-            data[dIdx + 2] = toFill[k + 3];
-            isColored[p] = 1;
-          }
+        }
+        for (let k = 0; k < toFill.length; k += 4) {
+          const p = toFill[k];
+          const dIdx = p * 4;
+          data[dIdx]     = toFill[k + 1];
+          data[dIdx + 1] = toFill[k + 2];
+          data[dIdx + 2] = toFill[k + 3];
+          isColored[p] = 1;
         }
       }
 
@@ -1003,9 +1011,12 @@
       const ctx = targetCanvas.getContext('2d');
       const W = targetCanvas.width;
       const H = targetCanvas.height;
-      const N = 3;
+      const N = 8; // 高解析度 8x8 雙線性立體仿射網格 (64 細分塊 / 128 三角形)，消除邊緣鋸齒與扭曲 blur
 
-      ctx.clearRect(0, 0, W, H);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
 
       for (let r = 0; r < N; r++) {
         for (let c = 0; c < N; c++) {
