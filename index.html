@@ -161,6 +161,10 @@
       background: linear-gradient(135deg, #ec4899, #8b5cf6);
       box-shadow: 0 4px 14px rgba(236, 72, 153, 0.45);
     }
+    .btn-cv {
+      background: linear-gradient(135deg, #06b6d4, #0284c7);
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.45);
+    }
     .btn-toggle {
       background: rgba(30, 41, 59, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -350,6 +354,9 @@
     <button class="action-btn btn-dotday" onclick="toggleDotDayMode()">
       <span>🔮</span><span id="dotday-btn-label">圓點星球</span>
     </button>
+    <button class="action-btn btn-cv" onclick="toggleCVMode()">
+      <span>🧬</span><span id="cv-btn-label">CV萬能塗鴉3D</span>
+    </button>
     <button class="action-btn btn-green" onclick="playPhonicsAudio()">
       <span>🗣️</span><span id="btn-text">自然發音</span>
     </button>
@@ -394,6 +401,11 @@
       <a-entity id="dotOrbRotatorAa" position="0 0.02 0.12" visible="false">
         <a-entity id="dotOrbGroupAa" rotation="0 0 0"></a-entity>
       </a-entity>
+
+      <!-- CV 輪廓演算法 (Contour Extrusion Algorithm) 動態 3D 擠壓模型 (預設隱藏) -->
+      <a-entity id="cvExtrudeRotatorAa" position="0 0.02 0.04" visible="false">
+        <a-entity id="cvExtrudeGroupAa" rotation="0 0 0"></a-entity>
+      </a-entity>
     </a-entity>
 
     <!-- ================= 標靶 1：Bb Bear ================= -->
@@ -409,6 +421,11 @@
       <!-- Quiver 3D Dot Day 夢幻彩繪星球 (預設隱藏) -->
       <a-entity id="dotOrbRotatorBb" position="0 0.02 0.12" visible="false">
         <a-entity id="dotOrbGroupBb" rotation="0 0 0"></a-entity>
+      </a-entity>
+
+      <!-- CV 輪廓演算法動態 3D 擠壓模型 (預設隱藏) -->
+      <a-entity id="cvExtrudeRotatorBb" position="0 0.02 0.04" visible="false">
+        <a-entity id="cvExtrudeGroupBb" rotation="0 0 0"></a-entity>
       </a-entity>
     </a-entity>
 
@@ -1292,15 +1309,20 @@
 
       const gatorRotator = document.querySelector('#alligatorRotator');
       const dotOrbAa = document.querySelector('#dotOrbRotatorAa');
+      const cvExtrudeAa = document.querySelector('#cvExtrudeRotatorAa');
 
       const bearRotator = document.querySelector('#bearRotator');
       const dotOrbBb = document.querySelector('#dotOrbRotatorBb');
+      const cvExtrudeBb = document.querySelector('#cvExtrudeRotatorBb');
 
       if (isDotDayOrbMode) {
         if (gatorRotator) gatorRotator.setAttribute('visible', 'false');
         if (dotOrbAa) dotOrbAa.setAttribute('visible', 'true');
+        if (cvExtrudeAa) cvExtrudeAa.setAttribute('visible', 'false');
+
         if (bearRotator) bearRotator.setAttribute('visible', 'false');
         if (dotOrbBb) dotOrbBb.setAttribute('visible', 'true');
+        if (cvExtrudeBb) cvExtrudeBb.setAttribute('visible', 'false');
 
         if (label) label.innerText = "1:1真形雕塑";
         showToast("🔮 切換至【Quiver 國際圓點節 3D 夢幻彩繪星球】！");
@@ -1308,11 +1330,222 @@
       } else {
         if (gatorRotator) gatorRotator.setAttribute('visible', 'true');
         if (dotOrbAa) dotOrbAa.setAttribute('visible', 'false');
+        if (cvExtrudeAa) cvExtrudeAa.setAttribute('visible', 'false');
+
         if (bearRotator) bearRotator.setAttribute('visible', 'true');
         if (dotOrbBb) dotOrbBb.setAttribute('visible', 'false');
+        if (cvExtrudeBb) cvExtrudeBb.setAttribute('visible', 'false');
 
         if (label) label.innerText = "圓點星球";
         showToast("🐊 切換回【1:1 精確貼合真形 3D 雕塑】");
+        playSFX('bubble');
+      }
+    }
+
+    /* =========================================================
+       CV 輪廓演算法 (Contour Extrusion Algorithm) 核心引擎
+       ========================================================= */
+    let isCVExtrudeMode = false;
+
+    function extractCVContourFromCanvas(ctx, W, H) {
+      const imgData = ctx.getImageData(0, 0, W, H);
+      const data = imgData.data;
+
+      const step = 4;
+      const gridW = Math.floor(W / step);
+      const gridH = Math.floor(H / step);
+      const grid = new Uint8Array(gridW * gridH);
+
+      let minX = gridW, maxX = 0, minY = gridH, maxY = 0;
+      let hasPixels = false;
+
+      for (let gy = 0; gy < gridH; gy++) {
+        const y = gy * step;
+        const rowIdx = y * W;
+        for (let gx = 0; gx < gridW; gx++) {
+          const x = gx * step;
+          const pIdx = (rowIdx + x) * 4;
+          const r = data[pIdx], g = data[pIdx + 1], b = data[pIdx + 2];
+
+          if (r < 250 || g < 250 || b < 250) {
+            grid[gy * gridW + gx] = 1;
+            if (gx < minX) minX = gx;
+            if (gx > maxX) maxX = gx;
+            if (gy < minY) minY = gy;
+            if (gy > maxY) maxY = gy;
+            hasPixels = true;
+          }
+        }
+      }
+
+      if (!hasPixels || maxX <= minX || maxY <= minY) return null;
+
+      let startX = minX, startY = minY;
+      while (startX <= maxX && grid[startY * gridW + startX] === 0) {
+        startX++;
+      }
+
+      const dirs = [
+        [-1, 0], [-1, -1], [0, -1], [1, -1],
+        [1, 0],  [1, 1],   [0, 1],  [-1, 1]
+      ];
+
+      const rawPts = [];
+      let currX = startX, currY = startY;
+      let dirIdx = 0;
+
+      for (let k = 0; k < 1200; k++) {
+        rawPts.push({ x: currX * step, y: currY * step });
+        let found = false;
+        const startDir = (dirIdx + 6) % 8;
+
+        for (let d = 0; d < 8; d++) {
+          const cDir = (startDir + d) % 8;
+          const nx = currX + dirs[cDir][0];
+          const ny = currY + dirs[cDir][1];
+
+          if (nx >= 0 && nx < gridW && ny >= 0 && ny < gridH) {
+            if (grid[ny * gridW + nx] === 1) {
+              currX = nx;
+              currY = ny;
+              dirIdx = cDir;
+              found = true;
+              break;
+            }
+          }
+        }
+
+        if (!found || (currX === startX && currY === startY)) break;
+      }
+
+      if (rawPts.length < 10) return null;
+
+      const sampleStride = Math.max(1, Math.floor(rawPts.length / 45));
+      const contourPts = [];
+
+      let cX = (minX + maxX) * step * 0.5;
+      let cY = (minY + maxY) * step * 0.5;
+      const refW = (activeTarget === 'Aa') ? 606.0 : 510.0;
+
+      for (let i = 0; i < rawPts.length; i += sampleStride) {
+        const px = rawPts[i].x;
+        const py = rawPts[i].y;
+        const x3d = (px - cX) / refW;
+        const y3d = -(py - cY) / refW;
+        contourPts.push(new THREE.Vector2(x3d, y3d));
+      }
+
+      return { points: contourPts, centerPx: { x: cX, y: cY }, refW: refW };
+    }
+
+    function buildCVExtruded3DMesh() {
+      const result = extractCVContourFromCanvas(texCtx, textureCanvas.width, textureCanvas.height);
+      if (!result || result.points.length < 5) return false;
+
+      const shape = new THREE.Shape(result.points);
+      shape.closePath();
+
+      const extrudeSettings = {
+        depth: 0.08,
+        bevelEnabled: true,
+        bevelSegments: 3,
+        steps: 1,
+        bevelSize: 0.006,
+        bevelThickness: 0.010
+      };
+
+      const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+      const uv = geom.attributes.uv;
+      const pos = geom.attributes.position;
+      const cX = result.centerPx.x;
+      const cY = result.centerPx.y;
+      const refW = result.refW;
+      const W = textureCanvas.width;
+      const H = textureCanvas.height;
+
+      for (let i = 0; i < pos.count; i++) {
+        const x3d = pos.getX(i);
+        const y3d = pos.getY(i);
+        const px = cX + x3d * refW;
+        const py = cY - y3d * refW;
+        const u = Math.max(0, Math.min(1, px / W));
+        const v = Math.max(0, Math.min(1, (H - py) / H));
+        uv.setXY(i, u, v);
+      }
+      uv.needsUpdate = true;
+      geom.computeVertexNormals();
+
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: dynamicTexture,
+        roughness: 0.2,
+        metalness: 0.0
+      });
+
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.name = `cv_extruded_mesh_${activeTarget}`;
+
+      const groupEl = (activeTarget === 'Aa')
+        ? document.querySelector('#cvExtrudeGroupAa')
+        : document.querySelector('#cvExtrudeGroupBb');
+
+      if (groupEl) {
+        const grp = groupEl.object3D;
+        while (grp.children.length > 0) {
+          grp.remove(grp.children[0]);
+        }
+        grp.add(mesh);
+        clickableObjects.push(mesh);
+      }
+
+      return true;
+    }
+
+    function toggleCVMode() {
+      initAudioContext();
+      isCVExtrudeMode = !isCVExtrudeMode;
+      const label = document.querySelector('#cv-btn-label');
+
+      const gatorRotator = document.querySelector('#alligatorRotator');
+      const dotOrbAa = document.querySelector('#dotOrbRotatorAa');
+      const cvExtrudeAa = document.querySelector('#cvExtrudeRotatorAa');
+
+      const bearRotator = document.querySelector('#bearRotator');
+      const dotOrbBb = document.querySelector('#dotOrbRotatorBb');
+      const cvExtrudeBb = document.querySelector('#cvExtrudeRotatorBb');
+
+      if (isCVExtrudeMode) {
+        extractPaperColoring();
+        const ok = buildCVExtruded3DMesh();
+
+        if (ok) {
+          if (gatorRotator) gatorRotator.setAttribute('visible', 'false');
+          if (dotOrbAa) dotOrbAa.setAttribute('visible', 'false');
+          if (cvExtrudeAa && activeTarget === 'Aa') cvExtrudeAa.setAttribute('visible', 'true');
+
+          if (bearRotator) bearRotator.setAttribute('visible', 'false');
+          if (dotOrbBb) dotOrbBb.setAttribute('visible', 'false');
+          if (cvExtrudeBb && activeTarget === 'Bb') cvExtrudeBb.setAttribute('visible', 'true');
+
+          if (label) label.innerText = "1:1真形雕塑";
+          showToast("🧬 CV 輪廓演算法啟動！動態將任意塗鴉 3D 化！");
+          playSFX('fanfare');
+        } else {
+          isCVExtrudeMode = false;
+          showToast("⚠️ 未偵測到圖畫輪廓，請在紙上塗色後重試");
+        }
+      } else {
+        if (gatorRotator) gatorRotator.setAttribute('visible', 'true');
+        if (dotOrbAa) dotOrbAa.setAttribute('visible', 'false');
+        if (cvExtrudeAa) cvExtrudeAa.setAttribute('visible', 'false');
+
+        if (bearRotator) bearRotator.setAttribute('visible', 'true');
+        if (dotOrbBb) dotOrbBb.setAttribute('visible', 'false');
+        if (cvExtrudeBb) cvExtrudeBb.setAttribute('visible', 'false');
+
+        if (label) label.innerText = "CV萬能塗鴉3D";
+        showToast("🐊 已切換回【1:1 精確貼合真形 3D 雕塑】");
         playSFX('bubble');
       }
     }
