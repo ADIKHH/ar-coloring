@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Quiver AR 字母著色 - 完美填滿旗艦版</title>
   
   <!-- A-Frame & MindAR (開源 WebAR 核心) -->
@@ -296,6 +299,57 @@
       0% { opacity: 1; transform: translate(-50%, -50%) scale(0.5); }
       100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
     }
+
+    /* 相機智慧診斷與快取排查浮動視窗 */
+    #camera-diag-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(14px);
+      z-index: 99999;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .diag-box {
+      background: #1e293b;
+      border: 2px solid #f59e0b;
+      border-radius: 20px;
+      padding: 22px 20px;
+      max-width: 92%;
+      width: 400px;
+      text-align: center;
+      color: #f8fafc;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    }
+    .diag-icon {
+      font-size: 38px;
+      margin-bottom: 8px;
+    }
+    .diag-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-bottom: 12px;
+    }
+    .diag-desc {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      text-align: left;
+      background: rgba(0,0,0,0.3);
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+    .diag-btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
@@ -313,6 +367,19 @@
   </div>
 
   <div id="toast-msg">✨ 提示訊息</div>
+
+  <!-- 相機異常與快取智慧診斷視窗 -->
+  <div id="camera-diag-modal">
+    <div class="diag-box">
+      <div class="diag-icon">📷</div>
+      <div class="diag-title" id="diag-title">相機啟動診斷中</div>
+      <div class="diag-desc" id="diag-desc">正在檢測相機權限與標靶載入狀態...</div>
+      <div class="diag-btn-row">
+        <button class="action-btn btn-camera" onclick="forceHardRefresh()">🔄 清除快取並重試</button>
+        <button class="action-btn btn-toggle" onclick="closeDiagnosticModal()">關閉提示</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 觸控手勢提示 -->
   <div id="touch-hint">
@@ -376,7 +443,7 @@
 
   <!-- WebAR 3D 場景 -->
   <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; filterMinCF: 0.0005; filterBeta: 0.01;" 
+    mindar-image="imageTargetSrc: ./targets.mind?v=20261013v2; autoStart: true; uiLoading: yes; filterMinCF: 0.0005; filterBeta: 0.01;" 
     color-space="sRGB" 
     vr-mode-ui="enabled: false" 
     device-orientation-permission-ui="enabled: false">
@@ -559,9 +626,100 @@
     const clickableObjects = [];
 
     /* =========================================================
-       3. 核心突破：1:1 絕對逆變換 UV 映射 (分毫不差完整覆蓋)
+       2.5. 智慧相機診斷與防快取守護器 (Camera Diagnostic Guard)
        ========================================================= */
     const sceneEl = document.querySelector('a-scene');
+    let isArReady = false;
+    let diagTimer = null;
+
+    function checkEnvironmentDiagnostics() {
+      const isSecure = window.isSecureContext || location.hostname === 'localhost' || location.protocol === 'https:';
+      const ua = navigator.userAgent || '';
+      const isLineOrInApp = /Line|FBAN|FBAV|MicroMessenger|Instagram/i.test(ua);
+      
+      if (!isSecure) {
+        showDiagnosticModal({
+          title: "⚠️ 需要 HTTPS 安全加密連線",
+          msg: "手機瀏覽器基於隱私保護規範，只允許在 HTTPS 網址下啟用相機！\n\n👉 請務必使用以 https:// 開頭的網址訪問。",
+          type: "danger"
+        });
+        return false;
+      }
+      if (isLineOrInApp) {
+        showDiagnosticModal({
+          title: "⚠️ 請改用原生瀏覽器開啟",
+          msg: "偵測到您目前是在 LINE 或社群 App 內建瀏覽器開啟，內建瀏覽器預設阻擋相機！\n\n👉 請點擊畫面右上角「•••」➔ 選擇「在 Safari 中開啟」或「在 Chrome 中開啟」。",
+          type: "warning"
+        });
+        return false;
+      }
+      return true;
+    }
+
+    function showDiagnosticModal(info) {
+      const modal = document.getElementById('camera-diag-modal');
+      if (!modal) return;
+      document.getElementById('diag-title').innerText = info.title || "📷 相機診斷提示";
+      document.getElementById('diag-desc').innerText = info.msg || "請檢查您的相機授權。";
+      modal.style.display = 'flex';
+    }
+
+    function closeDiagnosticModal() {
+      const modal = document.getElementById('camera-diag-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function forceHardRefresh() {
+      const cleanUrl = location.origin + location.pathname;
+      location.href = cleanUrl + '?nocache=' + Date.now();
+    }
+
+    // 啟動環境偵測
+    checkEnvironmentDiagnostics();
+
+    // 8 秒超時診斷：若 8 秒後相機與標靶仍在轉圈，主動彈窗提示排查
+    diagTimer = setTimeout(() => {
+      if (!isArReady) {
+        showDiagnosticModal({
+          title: "⏳ 標靶與相機載入較慢",
+          msg: "若畫面持續轉圈圈，常見原因：\n1. 手機瀏覽器快取了舊檔案（請點擊下方「清除快取並重試」）\n2. 尚未允許相機權限（請檢查網址列左側圖示）\n3. 請確認非在 LINE 等社群軟體內直接開啟。",
+          type: "warning"
+        });
+      }
+    }, 8000);
+
+    sceneEl.addEventListener('arReady', () => {
+      isArReady = true;
+      clearTimeout(diagTimer);
+      closeDiagnosticModal();
+      
+      // 確保將 MindAR 原生轉圈圈強制隱藏
+      const uiLoading = document.querySelector('.mindar-ui-loading');
+      if (uiLoading) uiLoading.classList.add('hidden');
+      
+      showToast("📷 相機與標靶已成功啟動！請對準紙本 Aa / Bb");
+    });
+
+    sceneEl.addEventListener('arError', (event) => {
+      clearTimeout(diagTimer);
+      console.error("MindAR arError:", event);
+      const err = (event && event.detail && event.detail.error) || "";
+      let desc = "無法啟動攝影機。";
+      if (err === "VIDEO_FAIL" || !navigator.mediaDevices) {
+        desc = "相機啟動被拒絕！請檢查：\n1. 點擊網址列左側圖示（AA 或鎖頭）確認相機已設為「允許」\n2. 背景是否有其他 App 正在佔用鏡頭\n3. 請確認是在 Safari 或 Chrome 原生瀏覽器中開啟。";
+      } else {
+        desc = "標靶載入失敗 (" + (err || "網路異常") + ")，請確認網路連線或點擊下方「清除快取重試」。";
+      }
+      showDiagnosticModal({
+        title: "⚠️ 相機或標靶啟動異常",
+        msg: desc,
+        type: "danger"
+      });
+    });
+
+    /* =========================================================
+       3. 核心突破：1:1 絕對逆變換 UV 映射 (分毫不差完整覆蓋)
+       ========================================================= */
 
     sceneEl.addEventListener('loaded', () => {
       buildAccurateAlligator();
